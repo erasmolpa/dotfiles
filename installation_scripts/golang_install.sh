@@ -1,7 +1,12 @@
 #!/bin/sh
 ## SEE https://jimkang.medium.com/install-go-on-mac-with-homebrew-5fa421fc55f5
 
-brew update&& brew install golang
+if ! command -v go >/dev/null 2>&1; then
+  echo "Installing Go..."
+  brew update && brew install golang
+else
+  echo "Go already installed. Skipping."
+fi
 
 echo 'setup GO workspace'
 mkdir -p $HOME/go/{bin,src,pkg}

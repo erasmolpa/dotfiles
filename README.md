@@ -134,6 +134,29 @@ This script updates all major package managers (Homebrew, pipx, npm), runs secur
 
 ---
 
+## Python Setup: uv & pre-commit
+
+- **uv** es el gestor de paquetes recomendado para Python. Se instala automáticamente durante el setup.
+- **pre-commit** se instala y activa automáticamente si hay un repo git y `.pre-commit.yml`.
+- Puedes añadir más hooks editando `.pre-commit.yml`.
+
+### Uso manual
+
+- Instala dependencias Python:
+  ```sh
+  uv pip install -r requirements.txt
+  ```
+- Ejecuta todos los hooks pre-commit manualmente:
+  ```sh
+  pre-commit run --all-files
+  ```
+- Activa los hooks (si no se activaron):
+  ```sh
+  pre-commit install
+  ```
+
+---
+
 ## Agent Frameworks & Automated Tool Setup
 
 This repo supports modern agent/AI workflows for Python and Go:
@@ -181,6 +204,29 @@ go get github.com/go-skynet/LocalAI github.com/sashabaranov/go-openai
 ```
 
 See `installation_scripts/agent_tools_install.sh` for details and customization.
+
+---
+
+## Practical Examples
+
+### Go Agent Project
+```sh
+go mod init my-go-agent
+go get github.com/go-skynet/LocalAI github.com/sashabaranov/go-openai
+# Start building your agent!
+```
+
+### Vim Setup & Plugins
+```sh
+./installation_scripts/vim_install.sh
+# Edit your ~/.vimrc to add plugins, then re-run the script to auto-install
+```
+
+### AI/DevOps Environment
+```sh
+./installation_scripts/ia_install.sh
+# Installs Cursor, VSCode, bun, Python AI libs, etc. Only missing tools are installed.
+```
 
 ---
 

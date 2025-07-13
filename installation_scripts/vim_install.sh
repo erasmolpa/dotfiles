@@ -20,9 +20,14 @@ else
 fi
 
 echo "Vim dependencies and plugin manager are ready. Installing Vim plugins automatically..."
-vim +PlugInstall +qall
-if [ $? -eq 0 ]; then
-  echo "✅ Vim plugins installed successfully."
+if vim --cmd 'echo len(filter(values(g:plugs), {k,v -> v.loaded})) == len(keys(g:plugs))' +qall &>/dev/null; then
+  echo "✅ All Vim plugins already installed. Skipping."
 else
-  echo "⚠️  There was an issue installing Vim plugins. Please check your .vimrc and try manually with :PlugInstall."
+  echo "Installing Vim plugins..."
+  vim +PlugInstall +qall
+  if [ $? -eq 0 ]; then
+    echo "✅ Vim plugins installed successfully."
+  else
+    echo "⚠️  There was an issue installing Vim plugins. Please check your .vimrc and try manually with :PlugInstall."
+  fi
 fi

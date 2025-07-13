@@ -19,26 +19,35 @@ chmod +x clone.sh python_config.sh golang_config.sh ia_config.sh
 
 # Check for Oh My Zsh and install if we don't have it
 if ! command -v omz >/dev/null 2>&1; then
+  echo "Installing Oh My Zsh..."
   /bin/sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/HEAD/tools/install.sh)"
+else
+  echo "Oh My Zsh already installed. Skipping."
 fi
 
 # Check for Homebrew and install if we don't have it
 if ! command -v brew >/dev/null 2>&1; then
+  echo "Installing Homebrew..."
   /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
   echo 'eval "$(/opt/homebrew/bin/brew shellenv)"' >> $HOME/.zprofile
   eval "$(/opt/homebrew/bin/brew shellenv)"
+else
+  echo "Homebrew already installed. Skipping."
 fi
 
 # Symlink .zshrc and .mackup.cfg from repo to $HOME
 ln -sf "$PWD/.zshrc" "$HOME/.zshrc"
 ln -sf "$PWD/.mackup.cfg" "$HOME/.mackup.cfg"
 
-# Update Homebrew recipes
+# Update Homebrew recipes and install bundle dependencies (skip if already installed)
+echo "Updating Homebrew recipes..."
 brew update
 
-# Install all dependencies with bundle (See Brewfile)
-brew tap homebrew/bundle
-brew bundle --file "$PWD/Brewfile"
+echo "Ensuring homebrew/bundle is tapped..."
+brew tap homebrew/bundle || echo "homebrew/bundle already tapped."
+
+echo "Checking and installing Brewfile dependencies..."
+brew bundle check --file "$PWD/Brewfile" || brew bundle --file "$PWD/Brewfile"
 
 # Create project directories
 mkdir -p "$HOME/Work/mine"
@@ -54,8 +63,7 @@ fi
 
 # (Optional) Set macOS preferences
 if [ -f .macos ]; then
-  echo "⚙️  Applying macOS preferences..."
-  source ./.macos
+  echo "ℹ️  To apply macOS preferences, run: source ./.macos"
 fi
 
 # Configure Python
