@@ -11,6 +11,8 @@ A complete, automated setup for a modern macOS development environment. This rep
 - Scripts for configuring Python, Go, AI/DevOps tools, and more
 - macOS preferences and shell customizations
 - Easy backup and restore of app settings with Mackup
+- **SRE/Observability helpers and wizards auto-loaded via ZSH_CUSTOM**
+- **All helpers in `helpers/`, wizards in `wizards/`, install scripts in `install/`**
 
 ---
 
@@ -19,84 +21,97 @@ A complete, automated setup for a modern macOS development environment. This rep
 ### 1. Clone the Repository
 ```sh
 git clone https://github.com/erasmolpa/mac-book-dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
+cd ~/.dotfiles/repo_dotfiles
+```
 
+### 2. Run the Installation Script
+```sh
+./install/install.sh
+```
+
+This script will:
 - Install Oh My Zsh (if not present)
 - Install Homebrew (if not present)
-- Symlink your `.zshrc` and `.mackup.cfg`
+- Symlink your `.zshrc` and helpers/wizards
 - Install all dependencies from the `Brewfile`
 - Create project directories
 - Clone personal repositories (see `clone.sh`)
 - Run configuration scripts for Python, Go, and AI tools
 
-### 3. Run Post-install Automation
+### 3. Post-install Automation
 
 After setup, run:
-
 ```sh
-./post-install.sh
+./install/post-install.sh
 ```
-
 This will update all packages, run security/code checks, and provide diagnostics.
+
+### 4. Restore App Preferences (Optional)
+
+If you use Mackup for syncing app settings:
+```sh
+mackup restore
 ```
 
 ---
 
 ## Project Structure
 
+- `helpers/` — SRE, aliases, cheatsheet helpers (auto-loaded)
+- `wizards/` — Interactive wizards for SRE/observability
+- `install/` — All install scripts (install.sh, post-install.sh, etc.)
+- `installation_scripts/` — Language/tool-specific installers (Python, Go, AI, Vim, etc.)
+- `docs/` — Documentation and usage guides
+- `inventory/` — Tool and config inventory
 - `Brewfile` — Homebrew, cask, mas, and VSCode extension list
-- `install.sh` — Main setup script
-- `pre_install.sh` — Bootstrap script for clean installs
-- `post_install.sh` — Post-setup update, diagnostics, and security automation
-- `.pre-commit.yml` — Automated code quality, formatting, and security checks
-- `installation_scripts/agent_tools_install.sh` — Ensures all agent/AI tools are ready for Python/Go projects
-
-- `clone.sh` — Clones personal repositories
-- `installation_scripts/python_install.sh`, `installation_scripts/golang_install.sh`, `installation_scripts/ia_install.sh` — Language/tool install scripts
-- `.zshrc`, `.macos`, `.mackup.cfg`, etc. — Dotfiles and preferences
+- `.zshrc`, `.mackup.cfg`, `.macos`, `.pre-commit.yml`, etc. — Dotfiles and preferences
+- `themes/` — Custom Zsh themes (e.g. minimal.zsh-theme)
+- `scripts/` — Utility scripts (e.g. ssh.sh)
 
 ---
 
+## Shell Auto-load
 
-To ensure Vim is ready with plugins and fuzzy search:
-
-  - Run the fzf install script for keybindings and completion
+All helpers and wizards in `helpers/` and `wizards/` are auto-loaded in any new terminal via Oh My Zsh and ZSH_CUSTOM. No manual sourcing required.
 
 ---
 
-## Backing Up Python Packages & Git Repo Initialization
+## Usage & Checklist
 
+- See `docs/USAGE.md` for step-by-step usage and troubleshooting.
+- See `inventory/TOOLS.md` for a full inventory and checklist for a new Mac.
 
-  ```sh
-  pip install -r requirements.txt
 ---
+
+## Troubleshooting & Best Practices
+
+- If a pre-commit hook fails, follow the error message for remediation (e.g., run `black .` or `ruff .` to auto-fix Python formatting).
+- Use `brew doctor` and `./install/post-install.sh` for diagnostics.
+- For AI/agent tool errors, check that all dependencies are installed and review `ia_config.sh` output.
+- Keep your dotfiles synced and backed up with Mackup.
+
 ---
 
-## Automated Code Quality & Security
-- **Python:** ruff, black, flake8
-- **Shell:** shellcheck, shfmt
-- **Markdown/YAML:** markdownlint, yamllint
-- **Terraform:** checkov, tfsec
-- **Docker:** hadolint
+## Customization
 
-To run all checks manually:
+- **Brewfile**: Add or remove Homebrew formulas, casks, Mac App Store apps, and VSCode extensions
+- **.zshrc, helpers/aliases.zsh, helpers/sre.zsh**: Customize your shell, aliases, and SRE helpers
+- **.macos**: macOS system preferences (run manually if needed)
 
+---
+
+## Backing Up Settings
+
+To backup your app settings with Mackup:
 ```sh
-pre-commit run --all-files
+brew install mackup
+mackup backup
 ```
+Settings are synced to iCloud by default. See [Mackup documentation](https://github.com/lra/mackup) for more options.
 
 ---
-## Post-install Automation
 
-After setup, run:
-
-```sh
-./post-install.sh
-```
-
-This script updates all major package managers (Homebrew, pipx, npm), runs security/code checks, and provides diagnostics.
-
----
+**Automate your Mac. Code with confidence.**
 
 ## Python Setup: uv & pre-commit
 
