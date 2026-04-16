@@ -17,19 +17,10 @@ A complete, automated setup for a modern macOS development environment. This rep
 ## Getting Started
 
 ### 1. Clone the Repository
-
 ```sh
 git clone https://github.com/erasmolpa/mac-book-dotfiles.git ~/.dotfiles
 cd ~/.dotfiles
-```
 
-### 2. Run the Installation Script
-
-```sh
-./install.sh
-```
-
-This script will:
 - Install Oh My Zsh (if not present)
 - Install Homebrew (if not present)
 - Symlink your `.zshrc` and `.mackup.cfg`
@@ -47,13 +38,6 @@ After setup, run:
 ```
 
 This will update all packages, run security/code checks, and provide diagnostics.
-
-### 3. Restore App Preferences (Optional)
-
-If you use Mackup for syncing app settings:
-
-```sh
-mackup restore
 ```
 
 ---
@@ -73,42 +57,23 @@ mackup restore
 
 ---
 
-## Editor & Vim Setup
 
 To ensure Vim is ready with plugins and fuzzy search:
 
-- Run the following after your main install:
-
-  ```sh
-  ./installation_scripts/vim_install.sh
-  ```
-- This will:
-  - Install vim-plug (if missing) for plugin management
   - Run the fzf install script for keybindings and completion
-  - Automatically install all plugins defined in your `.vimrc`.
 
 ---
 
 ## Backing Up Python Packages & Git Repo Initialization
 
-- After running `post_install.sh`, a `requirements.txt` is generated with all installed pip packages. Use this to restore your Python environment on new machines:
 
   ```sh
   pip install -r requirements.txt
-  ```
-
-- The first run of `install.sh` will initialize a git repository in your dotfiles folder (if not already present), add a basic `.gitignore` (ignoring sensitive files), and commit your configuration. This ensures your setup is versioned and portable.
-
 ---
-
 ---
 
 ## Automated Code Quality & Security
-
-This repo uses [pre-commit](https://pre-commit.com/) to enforce best practices and catch issues before they reach your main branch. Hooks include:
-- **Security & Sensitive Data:** git-secrets, detect-secrets, bandit, detect-private-key
 - **Python:** ruff, black, flake8
-- **JS/TS:** eslint, prettier
 - **Shell:** shellcheck, shfmt
 - **Markdown/YAML:** markdownlint, yamllint
 - **Terraform:** checkov, tfsec
@@ -121,7 +86,6 @@ pre-commit run --all-files
 ```
 
 ---
-
 ## Post-install Automation
 
 After setup, run:
