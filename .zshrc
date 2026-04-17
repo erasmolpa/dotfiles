@@ -1,5 +1,5 @@
 # Path to your dotfiles.
-export DOTFILES=$HOME/.dotfiles
+export DOTFILES=$HOME/repo_dotfiles
 
 # If you come from bash you might have to change your $PATH.
 # export PATH=$HOME/bin:/usr/local/bin:$PATH
@@ -78,9 +78,18 @@ ZSH_CUSTOM=$DOTFILES
 # Custom plugins may be added to $ZSH_CUSTOM/plugins/
 # Example format: plugins=(rails git textmate ruby lighthouse)
 # Add wisely, as too many plugins slow down shell startup.
-plugins=(artisan git)
+plugins=(git docker kubectl helm terraform aws)
 
 source $ZSH/oh-my-zsh.sh
+
+# Source helpers and wizards (Oh My Zsh only auto-loads $ZSH_CUSTOM/*.zsh, not subdirectories)
+for f in "$DOTFILES/helpers"/*.zsh(N); do source "$f"; done
+for f in "$DOTFILES/wizards"/*.zsh(N); do source "$f"; done
+
+# pyenv init
+if command -v pyenv >/dev/null 2>&1; then
+  eval "$(pyenv init -)"
+fi
 
 # User configuration
 

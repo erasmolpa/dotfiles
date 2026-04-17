@@ -48,10 +48,10 @@ else
   echo "Python 3.9.2 already installed in pyenv. Skipping."
 fi
 
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
-echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
+grep -qxF 'export PYENV_ROOT="$HOME/.pyenv"' ~/.bash_profile || echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.bash_profile
+grep -qxF 'export PATH="$PYENV_ROOT/bin:$PATH"' ~/.bash_profile || echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.bash_profile
 
-echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
-echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
+grep -qxF 'export PYENV_ROOT="$HOME/.pyenv"' ~/.zshrc || echo 'export PYENV_ROOT="$HOME/.pyenv"' >> ~/.zshrc
+grep -qxF 'export PATH="$PYENV_ROOT/bin:$PATH"' ~/.zshrc || echo 'export PATH="$PYENV_ROOT/bin:$PATH"' >> ~/.zshrc
 
 pyenv global 3.9.2

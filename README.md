@@ -149,7 +149,7 @@ This repo supports modern agent/AI workflows for Python and Go:
 To ensure all required tools and frameworks are installed for local Python/Go agent development, run:
 
 ```sh
-./agent_tools_setup.sh
+./installation_scripts/agent_tools_install.sh
 ```
 
 This script will:
@@ -163,7 +163,7 @@ Run this script anytime to bootstrap or update your local agent/AI environment.
 ### Example: Starting a Python Agent Project
 
 ```sh
-./agent_tools_setup.sh
+./installation_scripts/agent_tools_install.sh
 cd ~/Code
 python3 -m venv venv
 source venv/bin/activate
@@ -174,7 +174,7 @@ pip install crewai langchain llama-index openai
 ### Example: Starting a Go Agent Project
 
 ```sh
-./agent_tools_setup.sh
+./installation_scripts/agent_tools_install.sh
 cd ~/Code
 mkdir my-go-agent && cd my-go-agent
 go mod init my-go-agent
@@ -206,36 +206,6 @@ go get github.com/go-skynet/LocalAI github.com/sashabaranov/go-openai
 ./installation_scripts/ia_install.sh
 # Installs Cursor, VSCode, bun, Python AI libs, etc. Only missing tools are installed.
 ```
-
----
-
-## Troubleshooting & Best Practices
-
-- If a pre-commit hook fails, follow the error message for remediation (e.g., run `black .` or `ruff .` to auto-fix Python formatting).
-- Use `brew doctor` and `./post-install.sh` to diagnose system issues.
-- For AI/agent tool errors, check that all dependencies are installed and review `ia_config.sh` output.
-- Keep your dotfiles synced and backed up with Mackup.
-
----
-
-## Customization
-
-- **Brewfile**: Add or remove Homebrew formulas, casks, Mac App Store apps, and VSCode extensions
-- **.zshrc, aliases.zsh, path.zsh**: Customize your shell, aliases, and PATH
-- **.macos**: macOS system preferences (run manually if needed)
-
----
-
-## Backing Up Settings
-
-To backup your app settings with Mackup:
-
-```sh
-brew install mackup
-mackup backup
-```
-
-Settings are synced to iCloud by default. See [Mackup documentation](https://github.com/lra/mackup) for more options.
 
 ---
 

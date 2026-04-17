@@ -100,6 +100,17 @@ brew "stripe/stripe-cli/stripe"
 brew "stripe/stripe-mock/stripe-mock"
 brew "derailed/k9s/k9s"
 
+# SRE / Observability tools
+brew "stern"          # Multi-pod log tailing for Kubernetes
+brew "k6"             # Load testing tool
+brew "eksctl"         # EKS cluster management CLI
+brew "yq"             # YAML/JSON processor (like jq for YAML)
+brew "kustomize"      # Kubernetes manifest customization
+brew "prometheus"     # Installs promtool for config/rule validation
+brew "loki"           # Installs logcli for LogQL queries
+brew "alertmanager"   # Installs amtool for Alertmanager management
+# DataDog agent → install via: https://docs.datadoghq.com/agent/basic_agent_usage/osx/
+
 # Apps (Casks)
 cask "1password"
 cask "caffeine"

@@ -15,7 +15,7 @@ fi
 echo "🔧 Setting up your Mac..."
 
 # Ensure all scripts are executable
-chmod +x clone.sh python_config.sh golang_config.sh ia_config.sh
+chmod +x clone.sh installation_scripts/python_install.sh installation_scripts/golang_install.sh installation_scripts/ia_install.sh
 
 # Check for Oh My Zsh and install if we don't have it
 if ! command -v omz >/dev/null 2>&1; then
@@ -68,14 +68,14 @@ fi
 
 # Configure Python
 echo "🐍 Configuring Python environment..."
-./installation_scripts/python_install.sh
+bash "$(dirname "$0")/installation_scripts/python_install.sh"
 
 # Configure Go
 echo "🔵 Configuring Go environment..."
-./installation_scripts/golang_install.sh
+bash "$(dirname "$0")/installation_scripts/golang_install.sh"
 
 # Configure AI/DevOps tools
 echo "🤖 Configuring AI/DevOps tools..."
-./installation_scripts/ia_install.sh
+bash "$(dirname "$0")/installation_scripts/ia_install.sh"
 
 echo "✅ All done! Your Mac is ready."
