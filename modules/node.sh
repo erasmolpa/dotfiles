@@ -18,6 +18,7 @@ node_get_desired() {
 
 node_get_current() {
   command -v npm &>/dev/null || return 0
+  log_progress "node: checking global npm packages from inventory..."
   local inv line pkg
   inv="$(node_inv)"
   [[ -f "$inv" ]] || return 0

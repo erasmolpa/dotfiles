@@ -8,6 +8,7 @@ vim_get_desired() {
 }
 
 vim_get_current() {
+  log_progress "vim: checking vim-plug, fzf, and plugin marker..."
   [[ -f "$HOME/.vim/autoload/plug.vim" ]] && echo "step:plugvim"
   if command -v fzf &>/dev/null; then
     local d

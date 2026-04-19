@@ -13,13 +13,17 @@ module_selected() {
 run_plan() {
   export MACCTL_DRY_RUN MACCTL_ONLY
   local _mod tmp_d tmp_c miss
+  log_info "plan: starting (${#MACCTL_MODULES[@]} module(s); only='${MACCTL_ONLY:-all}')"
   for _mod in "${MACCTL_MODULES[@]}"; do
     module_selected "$_mod" || continue
+    log_progress "plan: [${_mod}] reading desired state..."
     tmp_d=$(mktemp)
     tmp_c=$(mktemp)
     trap 'rm -f "$tmp_d" "$tmp_c"' RETURN
     "${_mod}_get_desired" >"$tmp_d" 2>/dev/null || true
+    log_progress "plan: [${_mod}] scanning what is installed (may take a while)..."
     "${_mod}_get_current" >"$tmp_c" 2>/dev/null || true
+    log_progress "plan: [${_mod}] computing diff..."
     miss=$(diff_lists "$tmp_d" "$tmp_c")
     if [[ -z "$miss" ]]; then
       log_info "plan: module '${_mod}' - nothing to do"
@@ -30,18 +34,23 @@ run_plan() {
     rm -f "$tmp_d" "$tmp_c"
     trap - RETURN
   done
+  log_info "plan: finished all modules"
 }
 
 run_apply() {
   export MACCTL_DRY_RUN MACCTL_ONLY
   local _mod tmp_d tmp_c miss
+  log_info "apply: starting (${#MACCTL_MODULES[@]} module(s); dry-run=${MACCTL_DRY_RUN}; only='${MACCTL_ONLY:-all}')"
   for _mod in "${MACCTL_MODULES[@]}"; do
     module_selected "$_mod" || continue
+    log_progress "apply: [${_mod}] reading desired state..."
     tmp_d=$(mktemp)
     tmp_c=$(mktemp)
     trap 'rm -f "$tmp_d" "$tmp_c"' RETURN
     "${_mod}_get_desired" >"$tmp_d" 2>/dev/null || true
+    log_progress "apply: [${_mod}] scanning what is installed..."
     "${_mod}_get_current" >"$tmp_c" 2>/dev/null || true
+    log_progress "apply: [${_mod}] computing diff..."
     miss=$(diff_lists "$tmp_d" "$tmp_c")
     if [[ -z "$miss" ]]; then
       log_info "apply: module '${_mod}' - already in sync"
@@ -52,4 +61,5 @@ run_apply() {
     rm -f "$tmp_d" "$tmp_c"
     trap - RETURN
   done
+  log_info "apply: finished all modules"
 }

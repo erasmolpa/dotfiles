@@ -7,6 +7,9 @@ log_info() { printf '%b\n' "[macctl] $*" >&2; }
 log_warn() { printf '%b\n' "[macctl] WARN: $*" >&2; }
 log_error() { printf '%b\n' "[macctl] ERROR: $*" >&2; }
 
+# Visible progress (stderr); use for long-running steps so the terminal does not look hung.
+log_progress() { printf '%b\n' "[macctl] ... $*" >&2; }
+
 # Lines present in file A but not in file B (desired minus current).
 diff_lists() {
   local a="$1" b="$2"
@@ -24,6 +27,7 @@ run_command() {
     log_info "DRY-RUN: $*"
     return 0
   fi
+  log_info "running: $*"
   if ! eval "$@"; then
     log_error "Command failed: $*"
     return 1
@@ -36,7 +40,8 @@ run_shellcheck() {
     log_error "shellcheck not found; install with: brew install shellcheck"
     return 1
   fi
-  local f status=0
+  log_info "lint: starting shellcheck under ${DOTFILES}"
+  local f status=0 rel
   for f in \
     "$DOTFILES/install.sh" \
     "$DOTFILES/bin/macctl" \
@@ -52,14 +57,18 @@ run_shellcheck() {
     "$DOTFILES/bootstrap/pyenv-setup.sh" \
     "$DOTFILES/scripts/ssh.sh"; do
     [[ -f "$f" ]] || continue
+    rel="${f#"${DOTFILES}"/}"
+    log_progress "lint: shellcheck ${rel}"
     shellcheck -x "$f" || status=1
   done
   for f in "$DOTFILES/modules"/*.sh; do
     [[ -f "$f" ]] || continue
+    rel="${f#"${DOTFILES}"/}"
+    log_progress "lint: shellcheck ${rel}"
     shellcheck -x "$f" || status=1
   done
   if [[ "$status" -eq 0 ]]; then
-    log_info "lint: shellcheck passed"
+    log_info "lint: shellcheck passed (all checked files)"
   else
     log_error "lint: shellcheck reported issues"
   fi

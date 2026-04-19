@@ -51,9 +51,17 @@ ia__uv_installed() {
 
 ia_get_current() {
   command -v brew &>/dev/null || return 0
-  local f line k v
+  local f line k v p inst_f taps_f
+  inst_f=$(mktemp)
+  taps_f=$(mktemp)
+  trap 'rm -f "$inst_f" "$taps_f"' RETURN
+  log_progress "ia: caching brew taps and formulae..."
+  brew list --formula -1 2>/dev/null | sort -u >"$inst_f" || true
+  brew tap 2>/dev/null | awk '{print $1}' | sort -u >"$taps_f" || true
+
   f="$(ia_manifest)"
   if [[ -f "$f" ]]; then
+    log_progress "ia: matching manifest to installed brew state..."
     while IFS= read -r line || [[ -n "$line" ]]; do
       line="${line//$'\r'/}"
       [[ -z "${line//[[:space:]]/}" || "$line" =~ ^[[:space:]]*# ]] && continue
@@ -64,10 +72,14 @@ ia_get_current() {
       [[ -n "$v" ]] || continue
       case "$k" in
         tap)
-          brew tap 2>/dev/null | awk '{print $1}' | grep -Fxq "$v" && echo "tap:${v}"
+          grep -Fxq "$v" "$taps_f" 2>/dev/null && echo "tap:${v}"
           ;;
         brew_formula)
-          brew list --formula "$v" &>/dev/null && echo "brew_formula:${v}"
+          if grep -Fxq "$v" "$inst_f" 2>/dev/null; then
+            echo "brew_formula:${v}"
+          elif [[ "$v" == */* ]] && grep -Fxq "${v##*/}" "$inst_f" 2>/dev/null; then
+            echo "brew_formula:${v}"
+          fi
           ;;
         brew_cask)
           ia__cask_installed "$v" && echo "brew_cask:${v}"
@@ -77,6 +89,7 @@ ia_get_current() {
   fi
   f="$(ia_uvpkgs)"
   if [[ -f "$f" ]]; then
+    log_progress "ia: checking uv pip packages from inventory..."
     while IFS= read -r line || [[ -n "$line" ]]; do
       line="${line//$'\r'/}"
       [[ -z "${line//[[:space:]]/}" || "$line" =~ ^[[:space:]]*# ]] && continue
@@ -84,6 +97,8 @@ ia_get_current() {
       ia__uv_installed "$p" && echo "uvpip:${p}"
     done <"$f"
   fi
+  rm -f "$inst_f" "$taps_f"
+  trap - RETURN
 }
 
 ia_install() {

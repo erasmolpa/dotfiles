@@ -143,6 +143,7 @@ import_brewfile_covers_formula() {
 
 import_run_brew() {
   import_ecosystem_selected brew || return 0
+  log_progress "import: ecosystem brew - reading taps, formulae, casks, mas, VS Code..."
   command -v brew &>/dev/null || {
     log_warn "import: brew not found; skipping Homebrew"
     return 0
@@ -256,6 +257,7 @@ import_pip_skip() {
 
 import_run_python() {
   import_ecosystem_selected python || return 0
+  log_progress "import: ecosystem python - merging pip freeze into requirements.txt..."
   command -v python3 &>/dev/null || {
     log_warn "import: python3 not found; skipping Python"
     return 0
@@ -315,6 +317,7 @@ import_run_python() {
 
 import_run_node() {
   import_ecosystem_selected node || return 0
+  log_progress "import: ecosystem node - reading global npm packages..."
   command -v npm &>/dev/null || {
     log_warn "import: npm not found; skipping Node"
     return 0
@@ -357,6 +360,7 @@ import_golang_match() {
 
 import_run_golang() {
   import_ecosystem_selected golang || return 0
+  log_progress "import: ecosystem golang - matching brew formulae..."
   command -v brew &>/dev/null || return 0
   local inv tmp n
   inv="${DOTFILES}/inventory/golang/formulae.txt"
@@ -375,6 +379,7 @@ import_run_golang() {
 
 import_run_vim() {
   import_ecosystem_selected vim || return 0
+  log_progress "import: ecosystem vim - scanning vim-plug lines in vimrc/nvim..."
   local out tmp n
   out="${DOTFILES}/inventory/vim/plugins.txt"
   tmp=$(mktemp)
@@ -416,6 +421,7 @@ import_ia_known_formulae() {
 
 import_run_ia() {
   import_ecosystem_selected ia || return 0
+  log_progress "import: ecosystem ia - manifest and uv pip lists..."
   local man uv tmp n mtmp
   man="${DOTFILES}/inventory/ia/manifest.txt"
   uv="${DOTFILES}/inventory/ia/uv-packages.txt"

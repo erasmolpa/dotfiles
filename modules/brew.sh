@@ -57,34 +57,61 @@ brew_get_desired() {
 
 brew_get_current() {
   command -v brew &>/dev/null || return 0
-  local bf tap f id ext
+  local bf tap f id ext line c cf
+  local inst_f inst_c taps_f mas_ids
   bf="$(brew_brewfile)"
+  inst_f=$(mktemp)
+  inst_c=$(mktemp)
+  taps_f=$(mktemp)
+  mas_ids=$(mktemp)
+  trap 'rm -f "$inst_f" "$inst_c" "$taps_f" "$mas_ids"' RETURN
+
+  log_progress "brew: listing installed formulae (one brew call)..."
+  brew list --formula -1 2>/dev/null | sort -u >"$inst_f" || true
+  log_progress "brew: listing installed casks..."
+  brew list --cask -1 2>/dev/null | tr '[:upper:]' '[:lower:]' | sort -u >"$inst_c" || true
+  log_progress "brew: listing taps..."
+  brew tap 2>/dev/null | awk '{print $1}' | sort -u >"$taps_f" || true
+
   while IFS= read -r tap; do
     [[ -z "$tap" ]] && continue
-    brew tap 2>/dev/null | awk '{print $1}' | grep -Fxq "$tap" && echo "tap:${tap}"
+    grep -Fxq "$tap" "$taps_f" 2>/dev/null && echo "tap:${tap}"
   done < <(brew__parse_taps "$bf")
+
+  log_progress "brew: matching Brewfile formulae to installed set..."
   while IFS= read -r f; do
     [[ -z "$f" ]] && continue
-    brew list --formula "$f" &>/dev/null && echo "formula:${f}"
+    if grep -Fxq "$f" "$inst_f" 2>/dev/null; then
+      echo "formula:${f}"
+    elif [[ "$f" == */* ]] && grep -Fxq "${f##*/}" "$inst_f" 2>/dev/null; then
+      echo "formula:${f}"
+    fi
   done < <(brew__parse_formulae "$bf")
+
   cf="$(brew_casks_file)"
   if [[ -f "$cf" ]]; then
-    local line c
+    log_progress "brew: matching casks.txt to installed casks..."
     while IFS= read -r line || [[ -n "$line" ]]; do
       line="${line//$'\r'/}"
       [[ -z "$line" || "$line" =~ ^[[:space:]]*# ]] && continue
       c="${line//[[:space:]]/}"
       [[ -z "$c" ]] && continue
-      brew list --cask "$c" &>/dev/null && echo "cask:${c}"
+      c_lc="$(printf '%s' "$c" | tr '[:upper:]' '[:lower:]')"
+      grep -Fiqx "$c_lc" "$inst_c" 2>/dev/null && echo "cask:${c}"
     done <"$cf"
   fi
+
   if command -v mas &>/dev/null; then
+    log_progress "brew: reading Mac App Store installs (mas list)..."
+    mas list 2>/dev/null | awk '$1 ~ /^[0-9]+$/ { print $1 }' | sort -u >"$mas_ids" || true
     while IFS= read -r id; do
       [[ -z "$id" ]] && continue
-      mas list 2>/dev/null | awk '{print $1}' | grep -Fxq "$id" && echo "mas:${id}"
+      grep -Fxq "$id" "$mas_ids" 2>/dev/null && echo "mas:${id}"
     done < <(brew__parse_mas_ids "$bf")
   fi
+
   if command -v code &>/dev/null; then
+    log_progress "brew: reading VS Code extensions..."
     local installed
     installed="$(code --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
     while IFS= read -r ext; do
@@ -92,13 +119,20 @@ brew_get_current() {
       echo "$installed" | grep -Fxq "$ext" && echo "vscode:${ext}"
     done < <(brew__parse_vscode "$bf")
   fi
+
+  log_progress "brew: done comparing installed vs inventory"
+  rm -f "$inst_f" "$inst_c" "$taps_f" "$mas_ids"
+  trap - RETURN
 }
 
 brew_install() {
   local buf
   buf="$(cat)"
-  local kind line
+  local kind line cnt
   for kind in tap formula cask mas vscode; do
+    cnt="$(printf '%s\n' "$buf" | grep "^${kind}:" 2>/dev/null | wc -l | tr -d ' ')"
+    [[ -z "$cnt" || ! "$cnt" =~ ^[0-9]+$ ]] && cnt=0
+    [[ "$cnt" -gt 0 ]] && log_progress "brew: installing ${cnt} ${kind} item(s)..."
     while IFS= read -r line; do
       [[ -z "$line" ]] && continue
       case "$line" in

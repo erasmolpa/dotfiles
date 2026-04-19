@@ -16,15 +16,21 @@ golang_get_desired() {
 
 golang_get_current() {
   command -v brew &>/dev/null || return 0
-  local inv f
+  local inv f inst
   inv="$(golang_inventory)"
   [[ -f "$inv" ]] || return 0
+  inst=$(mktemp)
+  trap 'rm -f "$inst"' RETURN
+  log_progress "golang: listing brew formulae (one brew call)..."
+  brew list --formula -1 2>/dev/null | sort -u >"$inst" || true
   while IFS= read -r f || [[ -n "$f" ]]; do
     f="${f//$'\r'/}"
     [[ -z "$f" || "$f" =~ ^[[:space:]]*# ]] && continue
     f="${f//[[:space:]]/}"
-    brew list --formula "$f" &>/dev/null && echo "formula:${f}"
+    grep -Fxq "$f" "$inst" 2>/dev/null && echo "formula:${f}"
   done <"$inv"
+  rm -f "$inst"
+  trap - RETURN
 }
 
 golang_install() {

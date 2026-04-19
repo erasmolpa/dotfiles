@@ -79,6 +79,7 @@ run_doctor() {
   local m
   for m in ${MACCTL_MODULES[@]+"${MACCTL_MODULES[@]}"}; do
     if declare -f "${m}_doctor" &>/dev/null; then
+      log_progress "doctor: running ${m}_doctor..."
       "${m}_doctor" || true
     fi
   done
@@ -116,6 +117,7 @@ run_sync() {
       log_info "sync: writing state/*.txt (snapshots for audit)"
     fi
     if command -v brew &>/dev/null; then
+      log_progress "sync: collecting brew formula and cask lists..."
       {
         echo "### brew formulae ($(date -u +%Y-%m-%dT%H:%MZ))"
         brew list --formula -1 2>/dev/null | sort -u || true
@@ -125,9 +127,11 @@ run_sync() {
       } >"$sd/brew-installed.txt"
     fi
     if command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null; then
+      log_progress "sync: writing pip freeze snapshot..."
       python3 -m pip freeze 2>/dev/null | sort -u >"$sd/python-installed.txt" || true
     fi
     if command -v npm &>/dev/null; then
+      log_progress "sync: writing global npm list snapshot..."
       npm list -g --depth=0 2>/dev/null >"$sd/node-installed.txt" || true
     fi
     mkdir -p "$DOTFILES/inventory/_generated"

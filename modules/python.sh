@@ -31,9 +31,13 @@ python_get_desired() {
 python_get_current() {
   command -v python3 &>/dev/null || return 0
   python3 -m pip --version &>/dev/null || return 0
-  local req line spec b
+  local req line spec b pip_pkgs
   req="$(python_req)"
   [[ -f "$req" ]] || return 0
+  pip_pkgs=$(mktemp)
+  trap 'rm -f "$pip_pkgs"' RETURN
+  log_progress "python: pip freeze (cached for this plan/apply step)..."
+  python3 -m pip freeze 2>/dev/null | cut -d= -f1 | tr '[:upper:]' '[:lower:]' | sort -u >"$pip_pkgs" || true
   while IFS= read -r line || [[ -n "$line" ]]; do
     line="${line//$'\r'/}"
     [[ -z "${line//[[:space:]]/}" || "$line" =~ ^[[:space:]]*# ]] && continue
@@ -41,8 +45,10 @@ python_get_current() {
     spec="${spec%"${spec##*[![:space:]]}"}"
     [[ "$spec" =~ ^git\+|^https?:// ]] && continue
     b="$(python__base_name "$spec")" || continue
-    python3 -m pip show "$b" &>/dev/null && echo "pip|${b}|${spec}"
+    grep -Fxq "$b" "$pip_pkgs" 2>/dev/null && echo "pip|${b}|${spec}"
   done <"$req"
+  rm -f "$pip_pkgs"
+  trap - RETURN
 }
 
 python_install() {
