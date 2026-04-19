@@ -1,226 +1,159 @@
-# dotfiles (`~/.dotfiles`)
+# Dotfiles for macOS — one control plane for your machine
 
-A complete, automated setup for a modern macOS development environment. This repository contains my personal dotfiles, Homebrew bundle, and scripts to configure tools for development, DevOps, and AI workflows.
+Turn a fresh Mac (or an existing one) into a **repeatable, documented environment**: shell, Homebrew stack, language toolchains, and optional AI/DevOps extras — driven by plain-text **inventory**, not one-off scripts you forget to re-run.
 
----
-
-## Features
-
-- Automated installation of Homebrew, Oh My Zsh, and essential CLI tools
-- Homebrew Bundle (`Brewfile`) for managing apps, fonts, and extensions
-- Scripts for configuring Python, Go, AI/DevOps tools, and more
-- macOS preferences and shell customizations
-- Easy backup and restore of app settings with Mackup
-- **SRE and observability helpers and wizards** loaded from `.zshrc` when `DOTFILES` is set (canonical path: `$HOME/.dotfiles`)
-- **`bin/macctl`** — single CLI (`plan`, `apply`, `doctor`, `sync`, `import`, `lint`) over `core/` plus `modules/` plugins
-- **Layout:** `config/` for dotfiles, `inventory/` for desired state, `state/` for snapshots and markers
+**Who this is for:** developers and platform engineers who want a **single workflow** to install, reconcile, and audit tooling — similar in spirit to infrastructure-as-code, applied to a laptop.
 
 ---
 
-## Getting Started
+## What you get
 
-### 1. Clone the repository (canonical location)
+| Outcome | How |
+|--------|-----|
+| **Predictable installs** | Desired packages live in `inventory/` (Brewfile, lists, manifests). |
+| **See before you change** | `macctl plan` shows what is missing vs inventory; `apply` installs only the gap. |
+| **Safe adoption of an existing Mac** | `macctl import` merges what is already installed into inventory (with backups); nothing is uninstalled. |
+| **Health checks** | `macctl doctor`, `macctl lint` (ShellCheck), and optional `bootstrap/post-setup.sh`. |
+| **Shell + SRE ergonomics** | Zsh config, helpers, and guided wizards under `config/zsh/`. |
 
-```sh
-git clone https://github.com/erasmolpa/dotfiles.git ~/.dotfiles
-cd ~/.dotfiles
+**`macctl`** is the product surface: one binary-style entrypoint (`bin/macctl`) that loads a small engine (`core/`) and plugins (`modules/`). You do not need to remember which script installs what.
+
+---
+
+## macctl at a glance
+
+```text
+plan          Diff inventory vs this Mac (stderr); use --only=brew,python,... to scope
+apply         Install missing items; --dry-run logs commands without running them
+import        Merge detected installs into inventory; --dry-run to preview; backups under state/import-backups/
+sync          Refresh state snapshots; add --pull-inventory to run import after snapshots
+doctor        Quick sanity checks (paths, brew, optional module hooks)
+lint          Run ShellCheck on shell entrypoints (requires shellcheck on PATH)
 ```
 
-`config/zsh/.zshrc` expects `DOTFILES=$HOME/.dotfiles`. Keep the repo there so paths and symlinks stay consistent.
+Flags can appear **before or after** the subcommand (for example `macctl --only=brew plan`). Run from the repo root or call `~/.dotfiles/bin/macctl` with an absolute path.
 
-### 2. No Homebrew or no git yet (optional)
-
-If you do not have the repo on disk but you have a copy of `bootstrap/pre-install.sh` (for example on a USB stick), run it from that copy: it installs Homebrew if missing, installs `git`, and clones this repository into `~/.dotfiles`. If you already used `git clone` in step 1, skip this block.
-
-```sh
-bash bootstrap/pre-install.sh
-cd ~/.dotfiles && ./bootstrap/setup.sh
-```
-
-### 3. Main setup (Oh My Zsh, Homebrew, Brewfile, toolchains)
-
-```sh
-cd ~/.dotfiles
-chmod +x install.sh bin/macctl bootstrap/*.sh modules/*.sh
-./install.sh
-```
-
-What `bootstrap/setup.sh` does (it is invoked by `./install.sh`):
-
-- Installs Oh My Zsh and Homebrew if they are missing
-- Symlinks `config/zsh/.zshrc`, `config/git/*`, `config/mac/.macos`, `.mackup.cfg`, and related files into `$HOME`
-- Runs `bin/macctl apply --only=brew`, then `bootstrap/pyenv-setup.sh` when present, then `macctl apply --only=golang,python,node,vim,ia`
-- Creates work directories (`Work/mine`, `Code`, `Herd`, and so on)
-- Runs `bootstrap/clone-repos.sh` for optional personal repositories
-
-After setup, run `bin/macctl plan` to review diffs; see `docs/MACCTL-ARCHITECTURE.md`.
-
-### 4. Post-setup (updates and diagnostics)
-
-```sh
-./bootstrap/post-setup.sh
-```
-
-Updates Homebrew, pipx, and global npm packages, runs optional checks (pre-commit, trivy, `brew doctor`), and refreshes `state/python-installed.txt` when Python pip is available.
-
-### 5. Restore App Preferences (Optional)
-
-If you use Mackup for syncing app settings:
-```sh
-mackup restore
-```
+Architecture and extension points: `docs/MACCTL-ARCHITECTURE.md` · Import behavior: `docs/IMPORT.md` · Day-two usage: `docs/USAGE.md`.
 
 ---
 
-## Project layout
+## User journeys
 
-| Path | Contents |
-|------|----------|
-| `bin/macctl` | CLI: `plan`, `apply`, `doctor`, `sync`, `lint` |
-| `core/` | `helpers.sh`, `registry.sh`, `runner.sh`, `main.sh`, `module-order` — reconciliation engine |
-| `modules/` | Plugins: `brew.sh`, `golang.sh`, `python.sh`, `node.sh`, `vim.sh`, `ia.sh` (each exposes `_get_desired`, `_get_current`, `_install`) |
-| `config/zsh/` | `.zshrc`, `helpers/`, `wizards/`, `themes/`, `pyenv.zsh` |
-| `config/git/` | `.gitconfig`, `.gitignore_global` |
-| `config/mac/` | `.macos`, `.bash_profile` (when used) |
-| `inventory/` | `brew/`, `python/`, `node/`, `golang/`, `ia/`, `vim/` — desired state |
-| `bootstrap/` | `setup.sh`, `pre-install.sh`, `post-setup.sh`, `clone-repos.sh`, `pyenv-setup.sh` |
-| `scripts/` | Small utilities (for example `ssh.sh`) |
-| `bin/` | `macctl` and `.gitkeep` for extra binaries you add |
-| `state/` | Snapshots and markers (`macctl sync`; typically gitignored) |
-| Repo root | `Brewfile` → `inventory/brew/Brewfile`, `.mackup.cfg`, `.pre-commit.yml`, `install.sh` |
+### A. New Mac (greenfield)
 
----
+1. Clone to the canonical path (`.zshrc` expects `DOTFILES=$HOME/.dotfiles`):
 
-## Shell auto-load
+   ```sh
+   git clone https://github.com/erasmolpa/dotfiles.git ~/.dotfiles
+   cd ~/.dotfiles
+   ```
 
-`config/zsh/helpers/*.zsh` and `config/zsh/wizards/*.zsh` are loaded from `.zshrc` with `ZSH_CUSTOM=$DOTFILES/config/zsh` (themes under `config/zsh/themes/`).
+2. Run setup (installs Homebrew / Oh My Zsh if needed, symlinks `config/` into `$HOME`, runs phased `macctl apply`):
 
----
+   ```sh
+   chmod +x install.sh bin/macctl bootstrap/*.sh modules/*.sh
+   ./install.sh
+   ```
 
-## Usage & Checklist
+3. Open a new shell, then optionally `./bootstrap/post-setup.sh` and `mackup restore` if you use Mackup.
 
-- See `docs/USAGE.md` for step-by-step usage and troubleshooting.
-- See `inventory/TOOLS.md` for a full inventory and checklist for a new Mac.
+### B. Machine that already has tools (brownfield)
 
----
+1. Clone the repo (same path as above).
 
-## Troubleshooting & Best Practices
+2. Preview, then merge live state into inventory:
 
-- If a pre-commit hook fails, follow the error message for remediation (e.g., run `black .` or `ruff .` to auto-fix Python formatting).
-- Use `brew doctor`, `./bin/macctl doctor`, `./bin/macctl lint`, and `./bootstrap/post-setup.sh` for diagnostics.
-- For AI/agent tool errors, check that all dependencies are installed and review `ia_config.sh` output.
-- Keep your dotfiles synced and backed up with Mackup.
+   ```sh
+   ./bin/macctl import --dry-run
+   ./bin/macctl import
+   ```
 
----
+3. Review diffs, then align the machine to the merged inventory when you are ready:
 
-## Customization
+   ```sh
+   ./bin/macctl plan
+   ./bin/macctl apply --dry-run
+   ./bin/macctl apply
+   ```
 
-- **Brewfile**: Add or remove Homebrew formulas, casks, Mac App Store apps, and VSCode extensions
-- **`config/zsh/.zshrc`**, **`config/zsh/helpers/aliases.zsh`**, **`config/zsh/helpers/sre.zsh`**: shell, aliases, SRE helpers
-- **.macos**: macOS system preferences (run manually if needed)
+### C. Day two (updates)
+
+- Refresh snapshots: `./bin/macctl sync` (add `--write` / `--pull-inventory` as needed; see `docs/USAGE.md`).
+- Tighten shell quality: `./bin/macctl lint`.
+- Edit lists under `inventory/` and re-run `plan` / `apply` for the modules you changed.
 
 ---
 
-## Backing Up Settings
+## What ships in the box (high level)
 
-To backup your app settings with Mackup:
+- **Platform:** Homebrew (formulae, casks, MAS, VS Code extensions via Brewfile + lists).
+- **Languages & runtimes:** Python (pip inventory), Node globals, Go-related brew lines, `uv` / pyenv flow via bootstrap where enabled.
+- **Editor:** Vim / vim-plug path via the `vim` module (see `docs/USAGE.md` for markers like `state/vim-plugins.ok`).
+- **AI / DevOps add-ons:** Curated `ia` inventory (brew + `uv pip` lists); extend with `inventory/ia/manifest.txt` and `uv-packages.txt`.
+- **Shell & productivity:** Zsh, themes, aliases, SRE-oriented helpers and wizards under `config/zsh/`.
+- **Optional:** Mackup for app settings; `.pre-commit.yml` for repo hygiene when you work inside this tree.
+
+Deep inventory map: `inventory/TOOLS.md`.
+
+---
+
+## Repository map (for contributors)
+
+| Area | Role |
+|------|------|
+| `bin/macctl` | CLI entry → `core/main.sh` |
+| `core/` | Engine: helpers, registry, runner, `module-order`, `import.sh` |
+| `modules/` | One plugin per ecosystem (`brew`, `golang`, `python`, `node`, `vim`, `ia`) |
+| `inventory/` | Desired state (the source of truth for reconciliation) |
+| `config/` | Files symlinked into `$HOME` (zsh, git, mac prefs) |
+| `bootstrap/` | First-run and maintenance scripts |
+| `state/` | Snapshots and import backups (usually gitignored) |
+
+Root symlinks: `Brewfile` → `inventory/brew/Brewfile`. See the table above for the mental model; file-level detail stays in `docs/MACCTL-ARCHITECTURE.md`.
+
+---
+
+## Customization (where to edit)
+
+- **Packages & apps:** `inventory/brew/Brewfile`, `inventory/brew/casks.txt`, and other `inventory/*` lists.
+- **Shell:** `config/zsh/.zshrc`, `config/zsh/helpers/`, `config/zsh/wizards/`.
+- **Git / macOS defaults:** `config/git/`, `config/mac/.macos` (apply macOS prefs manually when you want them).
+
+---
+
+## Troubleshooting
+
+- **Pre-commit failures:** follow the hook output (formatters, linters, etc.).
+- **Paths:** keep the clone at `~/.dotfiles` unless you intentionally retarget `DOTFILES` in your shell.
+- **Diagnostics:** `brew doctor`, `./bin/macctl doctor`, `./bin/macctl lint`, `./bootstrap/post-setup.sh`.
+- **AI tooling issues:** confirm `brew` / `uv` pieces from `inventory/ia/` and re-run `macctl plan --only=ia`.
+
+---
+
+## Python, agents, and examples
+
+- **uv** and **pre-commit** are wired through bootstrap and inventory where enabled; adjust `.pre-commit.yml` for your team.
+- **Agent-style stacks (Python / Go):** this repo inventories common libraries and CLIs; heavy custom builds (for example compiling `llama.cpp`) stay manual by design.
+- Quick checks:
+
+  ```sh
+  ./bin/macctl apply --only=python,ia
+  ./bin/macctl apply --only=vim
+  ```
+
+---
+
+## Mackup (optional)
+
 ```sh
 brew install mackup
 mackup backup
 ```
-Settings are synced to iCloud by default. See [Mackup documentation](https://github.com/lra/mackup) for more options.
 
----
-
-## Python setup: uv and pre-commit
-
-- **uv** is the recommended Python packaging tool for this setup; it is installed when `bootstrap/pyenv-setup.sh` runs (Homebrew).
-- **pre-commit** is installed and hooks are registered when a git repo and `.pre-commit.yml` are present.
-- Add or change hooks by editing `.pre-commit.yml`.
-
-### Manual use
-
-- Install Python dependencies from inventory:
-  ```sh
-  ./bin/macctl apply --only=python
-  ```
-- Run all pre-commit hooks manually:
-  ```sh
-  pre-commit run --all-files
-  ```
-- Install git hooks if they are not active yet:
-  ```sh
-  pre-commit install
-  ```
-
----
-
-## Agent Frameworks & Automated Tool Setup
-
-This repo supports modern agent/AI workflows for Python and Go:
-
-- **Agent Frameworks:** [CrewAI](https://github.com/joaomdmoura/crewAI), [AutoGen](https://github.com/microsoft/autogen), [LangChain](https://github.com/langchain-ai/langchain), [LlamaIndex](https://github.com/jerryjliu/llama_index), [LocalAI](https://github.com/go-skynet/LocalAI), [go-openai](https://github.com/sashabaranov/go-openai)
-- **LLM/Inference:** [Ollama](https://ollama.com/), [llama.cpp](https://github.com/ggerganov/llama.cpp)
-- **Copilot CLI, Cursor IDE:** AI-enhanced coding
-
-### Automated Agent / AI tool setup
-
-Use the **`ia`** module (inventory under `inventory/ia/`) via macctl:
-
-```sh
-./bin/macctl plan --only=ia
-./bin/macctl apply --only=ia
-```
-
-Edit `inventory/ia/manifest.txt` and `inventory/ia/uv-packages.txt` to add or remove tools. Heavy one-offs (e.g. building `llama.cpp`) are intentionally not in the default manifest; run them manually when needed.
-
-### Example: Python agent venv
-
-```sh
-./bin/macctl apply --only=python,ia
-cd ~/Code
-python3 -m venv venv
-source venv/bin/activate
-pip install crewai langchain llama-index openai
-```
-
-### Example: Go agent module
-
-```sh
-cd ~/Code
-mkdir my-go-agent && cd my-go-agent
-go mod init my-go-agent
-go get github.com/go-skynet/LocalAI github.com/sashabaranov/go-openai
-```
-
----
-
-## Practical Examples
-
-### Go Agent Project
-```sh
-go mod init my-go-agent
-go get github.com/go-skynet/LocalAI github.com/sashabaranov/go-openai
-# Start building your agent!
-```
-
-### Vim setup & plugins
-```sh
-./bin/macctl apply --only=vim
-# Edit your ~/.vimrc to add plugins; remove state/vim-plugins.ok to force :PlugInstall again
-```
-
-### AI / DevOps extras
-```sh
-./bin/macctl apply --only=ia
-```
+Defaults and options: [Mackup documentation](https://github.com/lra/mackup).
 
 ---
 
 ## License
 
-This project is licensed under the terms of the MIT license. See [LICENSE.md](LICENSE.md) for details.
-
----
-
-**Automate your Mac. Code with confidence.**
+MIT — see [LICENSE.md](LICENSE.md).
