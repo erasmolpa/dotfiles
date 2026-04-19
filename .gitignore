@@ -4,7 +4,10 @@ config.local
 *.env
 .env.*
 secrets/
-requirements.txt
+# Generated at repo root (optional); tracked inventory lives in inventory/python/
+/requirements.txt
+state/*
+!state/.gitkeep
 
 # macOS
 .DS_Store

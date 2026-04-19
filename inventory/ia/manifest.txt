@@ -1,0 +1,4 @@
+# Declarative IA / DevOps extras (macctl module ia). Lines: type:value
+# Types: tap:name, brew_formula:name, brew_cask:name (optional if already in inventory/brew)
+tap:oven-sh/bun
+brew_formula:bun

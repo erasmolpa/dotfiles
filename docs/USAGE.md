@@ -1,55 +1,65 @@
-# Usage Guide: mac-book-dotfiles
+# Usage Guide: dotfiles (`~/.dotfiles`)
 
 ## Overview
-This guide explains how to use the helpers, wizards, and install scripts in this dotfiles repo for a clean, automated setup on a new Mac.
+
+This repo uses **`bin/macctl`** for inventory-driven installs and **`config/`** for files symlinked into `$HOME`.
 
 ---
 
 ## 1. Installation Steps
 
 1. **Clone the repository:**
+
    ```sh
-   git clone https://github.com/erasmolpa/mac-book-dotfiles.git ~/.dotfiles
-   cd ~/.dotfiles/repo_dotfiles
+   git clone https://github.com/erasmolpa/dotfiles.git ~/.dotfiles
+   cd ~/.dotfiles
    ```
-2. **Run the main install script:**
+
+2. **Run setup:**
+
    ```sh
-   ./install/install.sh
+   chmod +x install.sh bin/macctl bootstrap/*.sh modules/*.sh
+   ./install.sh
    ```
-3. **(Optional) Run post-install automation:**
+
+3. **(Optional) Post-setup:**
+
    ```sh
-   ./install/post-install.sh
+   ./bootstrap/post-setup.sh
    ```
-4. **(Optional) Restore app settings with Mackup:**
+
+4. **(Optional) Mackup:**
+
    ```sh
    mackup restore
    ```
 
 ---
 
-## 2. Helpers & Wizards
+## 2. macctl
 
-- All scripts in `helpers/` and `wizards/` are auto-loaded in every new terminal session via Oh My Zsh and ZSH_CUSTOM.
-- No manual sourcing is needed.
-- Use `help-sre` or `help-wizards` in your terminal to see available commands and wizards.
+- `macctl plan` — show what would change
+- `macctl apply` — apply missing packages
+- `macctl doctor` — validate environment
+- `macctl sync` — refresh `state/*.txt` snapshots
+- `macctl lint` — run ShellCheck on shell entrypoints and modules (`brew install shellcheck`)
+
+Use `--only=brew,python` and `--dry-run` as needed.
 
 ---
 
-## 3. Customization
+## 3. Shell (Zsh)
 
-- Add your own helpers to `helpers/` or wizards to `wizards/`.
-- Edit `.zshrc` or any helper script and reload your shell:
-  ```sh
-  source ~/.zshrc
-  ```
+- Config lives under **`config/zsh/`** (helpers, wizards, themes).
+- Reload: `source ~/.zshrc`
 
 ---
 
 ## 4. Troubleshooting
 
-- If a tool or helper does not load, check that the symlinks in `~/.oh-my-zsh/custom/` point to the correct folders.
-- Run `brew doctor` and `./install/post-install.sh` for diagnostics.
-- For more help, see the main `README.md`.
+- Confirm the repo is at `~/.dotfiles` and `~/.zshrc` points at `config/zsh/.zshrc`.
+- Run `macctl doctor` and `brew doctor`.
+- See `README.md` and `docs/MACCTL-ARCHITECTURE.md`.
 
 ---
 

@@ -1,61 +1,59 @@
 # Inventory: Tools & Configurations
 
-This file lists the main tools, scripts, and configurations included in this dotfiles repo. Use it to verify your setup or as a checklist for a new Mac.
+Checklist and map of this dotfiles repo. **`bin/macctl`** applies **`inventory/`** through **`modules/`** + **`core/`**.
 
 ---
 
-## Core Tools (installed via Brewfile)
-- Homebrew
-- Oh My Zsh
-- jq, yq
-- kubectl, stern
-- promtool, logcli, amtool
-- k6
-- terraform
-- helm
-- awscli
-- docker, docker-compose
-- python, pipx, uv
-- node, npm
-- pre-commit
-- mackup
-- fzf, ripgrep, bat, exa, fd, htop, tmux, neovim, vim
-- (see Brewfile for full list)
+## Declarative inventory (`inventory/`)
+- `inventory/brew/Brewfile` — taps, formulae, `mas`, VS Code extensions
+- `inventory/brew/casks.txt` — cask tokens
+- `inventory/python/requirements.txt` — pip (module **python**)
+- `inventory/node/global-packages.txt` — npm globals (module **node**)
+- `inventory/golang/formulae.txt` — extra brew formulae (module **golang**)
+- `inventory/ia/manifest.txt` / `uv-packages.txt` — module **ia**
+- `state/*.txt` — snapshots (`macctl sync`; gitignored except `.gitkeep`)
 
 ---
 
-## Helpers & Wizards
-- All scripts in `helpers/` (sre.zsh, aliases.zsh, cheatsheet.zsh)
-- All scripts in `wizards/` (wizards.zsh)
-- Auto-loaded in every terminal session
+## Core tools (via Brewfile + macctl)
+- Homebrew, Oh My Zsh, jq, yq, kubectl, terraform, docker, python, uv, node, …
+- Full list: `inventory/brew/Brewfile` + `casks.txt`
 
 ---
 
-## Install Scripts
-- `install/install.sh` — Main setup script
-- `install/post-install.sh` — Post-setup update & diagnostics
-- `installation_scripts/` — Language/tool-specific installers (Python, Go, AI, Vim, etc.)
+## Helpers & wizards
+- `config/zsh/helpers/*.zsh` (sre, aliases, cheatsheet, path)
+- `config/zsh/wizards/wizards.zsh`
+- Loaded from `config/zsh/.zshrc` (`ZSH_CUSTOM=$DOTFILES/config/zsh`)
 
 ---
 
-## Dotfiles
-- `.zshrc`, `.mackup.cfg`, `.macos`, `.pre-commit.yml`, `.gitignore`, etc.
+## Control plane
+- `bin/macctl` — `plan`, `apply`, `doctor`, `sync`, `lint` (ShellCheck; install with `brew install shellcheck`)
+- `core/module-order` — load order for `modules/<name>.sh`
+- `bootstrap/setup.sh` — first-time macOS bootstrap + symlinks + `macctl apply`
+- `bootstrap/pyenv-setup.sh` — pyenv / uv / default Python version
+- `bootstrap/post-setup.sh` — updates & diagnostics
+- `bootstrap/clone-repos.sh` — personal repos
 
 ---
 
-## Project Directories
-- `Code/`, `Herd/`, `Library/` created automatically
+## Dotfiles layout
+- `config/zsh/.zshrc` → `~/.zshrc`
+- `config/git/*` → `~/.gitconfig`, `~/.gitignore_global`
+- `config/mac/.macos` → `~/.macos` (symlink; apply manually if desired)
+- Repo root: `.mackup.cfg`, `.pre-commit.yml`, `install.sh`
 
 ---
 
 ## Usage
-- See `docs/USAGE.md` and `README.md` for full instructions
+- `docs/USAGE.md`, `docs/MACCTL-ARCHITECTURE.md`, `README.md`
 
 ---
 
 **Checklist for a new Mac:**
-- [ ] Clone repo
-- [ ] Run install script
-- [ ] Run post-install
-- [ ] Restore Mackup (optional)
-- [ ] Open new terminal and verify helpers/wizards load
+- [ ] Clone to `~/.dotfiles`
+- [ ] `./install.sh`
+- [ ] `./bootstrap/post-setup.sh`
+- [ ] Mackup restore (optional)
+- [ ] New shell: verify helpers / `macctl doctor`

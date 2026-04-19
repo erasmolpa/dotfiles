@@ -1,0 +1,2 @@
+# Brew formulae for Go (one per line). Reconciled by macctl module golang.
+golang

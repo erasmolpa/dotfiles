@@ -1,0 +1,3 @@
+# Declarative Python packages (macctl module python).
+# Only missing distributions are installed; already satisfied lines are skipped.
+pre-commit>=3.5

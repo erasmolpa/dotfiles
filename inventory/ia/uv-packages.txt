@@ -1,0 +1,10 @@
+# Python packages installed with `uv pip install` when missing (one name per line)
+openai
+langchain
+langgraph
+llama-index
+huggingface_hub
+tiktoken
+pydantic
+typer
+rich

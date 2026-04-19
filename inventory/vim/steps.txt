@@ -1,0 +1,1 @@
+# Vim module uses fixed steps (plugvim, fzf, plugins). This file is reserved for future overrides.

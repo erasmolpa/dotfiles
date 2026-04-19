@@ -1,0 +1,4 @@
+# Global npm packages (one per line). Reconciled vs: npm list -g --depth=0
+# Example (uncomment to enable):
+# typescript
+# pnpm

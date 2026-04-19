@@ -1,0 +1,26 @@
+# Homebrew casks (one token per line). Reconciled vs: brew list --cask
+# Lines starting with # are ignored.
+1password
+caffeine
+dbngin
+discord
+docker
+firefox
+font-lato
+font-open-sans
+font-roboto
+font-source-code-pro
+font-source-code-pro-for-powerline
+font-source-sans-pro
+font-source-serif-pro
+github
+google-chrome
+iterm2
+ollama
+powershell
+slack
+telegram
+visual-studio-code
+whatsapp
+zoom
+zwift

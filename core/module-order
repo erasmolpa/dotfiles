@@ -1,0 +1,8 @@
+# One module basename per line (loads modules/<name>.sh in this order).
+# Lines starting with # and blank lines are ignored.
+brew
+golang
+python
+node
+vim
+ia
