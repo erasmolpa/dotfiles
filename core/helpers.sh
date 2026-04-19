@@ -44,6 +44,7 @@ run_shellcheck() {
     "$DOTFILES/core/registry.sh" \
     "$DOTFILES/core/runner.sh" \
     "$DOTFILES/core/main.sh" \
+    "$DOTFILES/core/import.sh" \
     "$DOTFILES/bootstrap/pre-install.sh" \
     "$DOTFILES/bootstrap/setup.sh" \
     "$DOTFILES/bootstrap/post-setup.sh" \

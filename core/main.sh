@@ -8,12 +8,35 @@ set -euo pipefail
 
 MACCTL_DRY_RUN=0
 MACCTL_ONLY=""
+MACCTL_IMPORT_FORCE=0
 
 parse_flags() {
   while [[ $# -gt 0 ]]; do
     case "$1" in
+      -h | --help)
+        print_help
+        exit 0
+        ;;
       --dry-run) MACCTL_DRY_RUN=1 ;;
       --only=*) MACCTL_ONLY="${1#--only=}" ;;
+      *)
+        log_warn "ignoring unknown flag: $1"
+        ;;
+    esac
+    shift
+  done
+}
+
+parse_import_flags() {
+  while [[ $# -gt 0 ]]; do
+    case "$1" in
+      -h | --help)
+        print_help
+        exit 0
+        ;;
+      --dry-run) export MACCTL_DRY_RUN=1 ;;
+      --force) export MACCTL_IMPORT_FORCE=1 ;;
+      --only=*) export MACCTL_ONLY="${1#--only=}" ;;
       *)
         log_warn "ignoring unknown flag: $1"
         ;;
@@ -28,10 +51,15 @@ macctl — dotfiles control plane (core/ + modules/)
 
 Usage:
   macctl plan [--only=brew,golang,python,node,vim,ia]
+  macctl --only=brew plan   (flags may appear before the subcommand)
   macctl apply [--dry-run] [--only=brew,...]
   macctl doctor
-  macctl sync [--write]
+  macctl sync [--write] [--pull-inventory] [--dry-run] [--force]
+  macctl import [--dry-run] [--force] [--only=brew,python,...]
   macctl lint
+
+import: detects installed tools and merges into inventory/ (backups under state/import-backups/).
+        Never removes packages. --force replaces list-style files with detected-only (Brewfile is always append-only).
 
 Module load order is defined in core/module-order (one name per line; loads modules/<name>.sh).
 
@@ -58,34 +86,60 @@ run_doctor() {
 }
 
 run_sync() {
-  local write=0
+  local write=0 pull=0 sync_dry=0
   local a
-  for a in "$@"; do [[ "$a" == "--write" ]] && write=1; done
+  export MACCTL_IMPORT_FORCE="${MACCTL_IMPORT_FORCE:-0}"
+  for a in "$@"; do
+    case "$a" in
+      -h | --help)
+        print_help
+        exit 0
+        ;;
+      --write) write=1 ;;
+      --pull-inventory) pull=1 ;;
+      --dry-run) sync_dry=1 ;;
+      --force) export MACCTL_IMPORT_FORCE=1 ;;
+    esac
+  done
+  export MACCTL_DRY_RUN=0
+  if [[ "$pull" -eq 1 && "$sync_dry" -eq 1 ]]; then
+    export MACCTL_DRY_RUN=1
+  fi
   local sd="$DOTFILES/state"
   mkdir -p "$sd"
-  if [[ "$write" -eq 1 ]]; then
-    log_info "sync --write: refreshing state/*.txt from the live system"
+  if [[ "$sync_dry" -eq 1 ]]; then
+    log_info "sync: DRY-RUN — skipping state/*.txt and inventory/_generated/ snapshot writes"
   else
-    log_info "sync: writing state/*.txt (snapshots for audit)"
+    if [[ "$write" -eq 1 ]]; then
+      log_info "sync --write: refreshing state/*.txt from the live system"
+    else
+      log_info "sync: writing state/*.txt (snapshots for audit)"
+    fi
+    if command -v brew &>/dev/null; then
+      {
+        echo "### brew formulae ($(date -u +%Y-%m-%dT%H:%MZ))"
+        brew list --formula -1 2>/dev/null | sort -u || true
+        echo ""
+        echo "### brew casks"
+        brew list --cask -1 2>/dev/null | sort -u || true
+      } >"$sd/brew-installed.txt"
+    fi
+    if command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null; then
+      python3 -m pip freeze 2>/dev/null | sort -u >"$sd/python-installed.txt" || true
+    fi
+    if command -v npm &>/dev/null; then
+      npm list -g --depth=0 2>/dev/null >"$sd/node-installed.txt" || true
+    fi
+    mkdir -p "$DOTFILES/inventory/_generated"
+    cp -f "$sd/brew-installed.txt" "$DOTFILES/inventory/_generated/brew-installed.snapshot.txt" 2>/dev/null || true
+    log_info "sync: snapshots updated under state/ and inventory/_generated/"
   fi
-  if command -v brew &>/dev/null; then
-    {
-      echo "### brew formulae ($(date -u +%Y-%m-%dT%H:%MZ))"
-      brew list --formula -1 2>/dev/null | sort -u || true
-      echo ""
-      echo "### brew casks"
-      brew list --cask -1 2>/dev/null | sort -u || true
-    } >"$sd/brew-installed.txt"
+  if [[ "$pull" -eq 1 ]]; then
+    log_info "sync: --pull-inventory → running import (merge inventory from this machine)"
+    # shellcheck source=core/import.sh
+    source "$DOTFILES/core/import.sh"
+    run_import
   fi
-  if command -v python3 &>/dev/null && python3 -m pip --version &>/dev/null; then
-    python3 -m pip freeze 2>/dev/null | sort -u >"$sd/python-installed.txt" || true
-  fi
-  if command -v npm &>/dev/null; then
-    npm list -g --depth=0 2>/dev/null >"$sd/node-installed.txt" || true
-  fi
-  mkdir -p "$DOTFILES/inventory/_generated"
-  cp -f "$sd/brew-installed.txt" "$DOTFILES/inventory/_generated/brew-installed.snapshot.txt" 2>/dev/null || true
-  log_info "sync: snapshots updated under state/ and inventory/_generated/"
 }
 
 main_load() {
@@ -112,6 +166,50 @@ main_load() {
   done <"$DOTFILES/core/module-order"
 }
 
+# Accept "macctl plan --only=brew" and "macctl --only=brew plan". (set -- in a function would NOT
+# update the script's argv in bash, so this block stays at top level.)
+_macctl_sub=""
+_macctl_flags=()
+if [[ $# -eq 0 ]]; then
+  set -- help
+else
+  for _macctl_a in "$@"; do
+    case "$_macctl_a" in
+      -*)
+        _macctl_flags+=("$_macctl_a")
+        ;;
+      *)
+        if [[ -z "$_macctl_sub" ]]; then
+          _macctl_sub="$_macctl_a"
+        else
+          _macctl_flags+=("$_macctl_a")
+        fi
+        ;;
+    esac
+  done
+  if [[ -z "$_macctl_sub" && ${#_macctl_flags[@]} -gt 0 ]]; then
+    for _macctl_a in "${_macctl_flags[@]}"; do
+      case "$_macctl_a" in
+        -h | --help)
+          set -- help
+          _macctl_sub="help"
+          _macctl_flags=()
+          break
+          ;;
+      esac
+    done
+    if [[ -z "$_macctl_sub" ]]; then
+      printf '%s\n' "[macctl] ERROR: missing subcommand (plan, apply, doctor, sync, import, lint)." >&2
+      printf '%s\n' "Example: macctl plan --only=brew   or:   macctl apply --dry-run" >&2
+      exit 1
+    fi
+  fi
+  [[ -z "$_macctl_sub" ]] && _macctl_sub="help"
+  [[ "$_macctl_sub" != "help" || ${#_macctl_flags[@]} -gt 0 ]] && set -- "$_macctl_sub" "${_macctl_flags[@]}"
+  [[ "$_macctl_sub" == "help" && ${#_macctl_flags[@]} -eq 0 ]] && set -- help
+fi
+unset _macctl_sub _macctl_flags _macctl_a
+
 cmd="${1:-help}"
 shift || true
 
@@ -128,16 +226,51 @@ case "$cmd" in
     ;;
   doctor)
     main_load
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        -h | --help)
+          print_help
+          exit 0
+          ;;
+        *)
+          log_warn "doctor: unknown option: $1"
+          ;;
+      esac
+      shift
+    done
     run_doctor
     ;;
   sync)
     main_load
     run_sync "$@"
     ;;
+  import)
+    # shellcheck source=core/helpers.sh
+    source "$DOTFILES/core/helpers.sh"
+    export MACCTL_IMPORT_FORCE=0
+    export MACCTL_DRY_RUN=0
+    export MACCTL_ONLY=""
+    parse_import_flags "$@"
+    # shellcheck source=core/import.sh
+    source "$DOTFILES/core/import.sh"
+    run_import
+    ;;
   lint)
     # Only helpers needed for logging
     # shellcheck source=core/helpers.sh
     source "$DOTFILES/core/helpers.sh"
+    while [[ $# -gt 0 ]]; do
+      case "$1" in
+        -h | --help)
+          print_help
+          exit 0
+          ;;
+        *)
+          log_warn "lint: unknown option: $1"
+          ;;
+      esac
+      shift
+    done
     run_shellcheck
     ;;
   help | -h | --help)

@@ -12,7 +12,7 @@ A complete, automated setup for a modern macOS development environment. This rep
 - macOS preferences and shell customizations
 - Easy backup and restore of app settings with Mackup
 - **SRE and observability helpers and wizards** loaded from `.zshrc` when `DOTFILES` is set (canonical path: `$HOME/.dotfiles`)
-- **`bin/macctl`** — single CLI (`plan`, `apply`, `doctor`, `sync`, `lint`) over `core/` plus `modules/` plugins
+- **`bin/macctl`** — single CLI (`plan`, `apply`, `doctor`, `sync`, `import`, `lint`) over `core/` plus `modules/` plugins
 - **Layout:** `config/` for dotfiles, `inventory/` for desired state, `state/` for snapshots and markers
 
 ---

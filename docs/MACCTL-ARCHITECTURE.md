@@ -27,6 +27,8 @@ Core reconciliation stays generic; discovery is driven only by **`core/module-or
 - `macctl doctor` — sanity checks + optional `<name>_doctor` hooks.
 - `macctl sync` — refresh `state/*.txt` and `inventory/_generated/` hints.
 - `macctl lint` — run **ShellCheck** on `core/`, `bin/macctl`, `bootstrap/*.sh`, `install.sh`, and `modules/*.sh` (requires `shellcheck` on `PATH`).
+- `macctl import` — detect what is installed on this Mac and **merge** into `inventory/` (backups under `state/import-backups/<timestamp>/`). Flags: `--dry-run`, `--force`, `--only=brew,python,...`. Never uninstalls or deletes Brewfile lines; Brewfile changes are **append-only** (new taps / `brew` / `mas` / `vscode` lines). See `docs/IMPORT.md`.
+- `macctl sync --pull-inventory` — refresh `state/*.txt` as usual, then run the same merge logic as `import`. With **`--dry-run`**, snapshot writes are skipped and import runs in dry-run mode (useful with `--pull-inventory` only).
 
 ## Line format (examples)
 

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# macctl — single CLI entrypoint for dotfiles (plan / apply / doctor / sync)
+# macctl — single CLI entrypoint (plan / apply / doctor / sync / import / lint)
 set -euo pipefail
 ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 # If DOTFILES is set but invalid (e.g. symlinked macctl), fall back to repo root.

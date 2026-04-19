@@ -46,6 +46,17 @@ This repo uses **`bin/macctl`** for inventory-driven installs and **`config/`** 
 
 Use `--only=brew,python` and `--dry-run` as needed.
 
+### Import (inventory from this machine)
+
+```sh
+./bin/macctl import --dry-run
+./bin/macctl import
+./bin/macctl import --only=brew,python --force
+./bin/macctl sync --pull-inventory --dry-run
+```
+
+`import` merges detected packages into `inventory/` (backups under `state/import-backups/`). It does not remove software or delete Brewfile lines. Details: `docs/IMPORT.md`.
+
 ---
 
 ## 3. Shell (Zsh)

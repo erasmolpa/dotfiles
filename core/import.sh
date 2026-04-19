@@ -39,12 +39,11 @@ import_backup_file() {
 # $1 = path, $2 = temp file with new lines (one per line, no comments).
 import_merge_list_file() {
   local target="$1" new_lines="$2"
-  local hdr body out merged
+  local hdr body out merged lastc
   hdr=$(mktemp)
   body=$(mktemp)
   out=$(mktemp)
   merged=$(mktemp)
-  local lastc
   if [[ -f "$target" ]]; then
     local mode=header
     while IFS= read -r line || [[ -n "$line" ]]; do
@@ -307,7 +306,7 @@ import_run_python() {
   mkdir -p "$(dirname "$req")"
   {
     printf '# Declarative Python packages (macctl module python).\n'
-    printf '# Merged by macctl import — already pinned lines preserved where possible.\n'
+    printf '# Merged by macctl import - pinned lines preserved where possible.\n'
     grep -v '^[[:space:]]*#' "$merged" | grep -v '^[[:space:]]*$' | sort -u
   } >"$req"
   rm -f "$freeze" "$merged" "$have"
@@ -459,7 +458,7 @@ import_run_ia() {
   tmp=$(mktemp)
   : >"$tmp"
   if command -v uv &>/dev/null; then
-    uv pip list --format freeze 2>/dev/null | cut -d= -f1 | tr '[:upper:]' '[:lower:]' | sort -u >"$tmp" || true
+    uv pip freeze 2>/dev/null | cut -d= -f1 | tr '[:upper:]' '[:lower:]' | sort -u >"$tmp" || true
   fi
   local nu
   nu=$(wc -l <"$tmp" | tr -d ' ')

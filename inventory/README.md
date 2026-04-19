@@ -19,16 +19,21 @@ See **`docs/MACCTL-ARCHITECTURE.md`** for the full plugin contract and extension
 
 ## Commands
 
+Run these from the repository root, or use an absolute path (for example `~/.dotfiles/bin/macctl`). Flags may appear before the subcommand (for example `bin/macctl --only=brew plan`).
+
 ```sh
 ./bin/macctl plan
 ./bin/macctl apply --dry-run
 ./bin/macctl apply --only=brew,python
 ./bin/macctl doctor
 ./bin/macctl sync
+./bin/macctl import --dry-run
 ./bin/macctl lint
 ```
 
 `bootstrap/setup.sh` runs `macctl apply` in two phases (brew first, then golang/python/node/vim/ia) after symlinking **`config/`** into `$HOME`.
+
+**Adopting an existing Mac:** run `macctl import --dry-run`, review logs, then `macctl import` (optional `--only=…`, `--force`). Backups land in `state/import-backups/`. See **`docs/IMPORT.md`**.
 
 ## Reconciliation
 

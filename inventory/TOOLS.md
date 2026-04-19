@@ -29,7 +29,7 @@ Checklist and map of this dotfiles repo. **`bin/macctl`** applies **`inventory/`
 ---
 
 ## Control plane
-- `bin/macctl` — `plan`, `apply`, `doctor`, `sync`, `lint` (ShellCheck; install with `brew install shellcheck`)
+- `bin/macctl` — `plan`, `apply`, `doctor`, `sync`, `import`, `lint` (ShellCheck; install with `brew install shellcheck`)
 - `core/module-order` — load order for `modules/<name>.sh`
 - `bootstrap/setup.sh` — first-time macOS bootstrap + symlinks + `macctl apply`
 - `bootstrap/pyenv-setup.sh` — pyenv / uv / default Python version
