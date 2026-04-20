@@ -1,11 +1,9 @@
 # Taps
 tap "derailed/k9s"
 tap "homebrew/bundle"
-tap "homebrew/cask"
 tap "homebrew/cask-fonts"
 tap "homebrew/cask-versions"
 tap "nicoverbruggen/cask"
-tap "nicoverbruggen/homebrew-cask"
 tap "norwoodj/tap"
 tap "pulumi/tap"
 tap "shihanng/tfvar"
@@ -64,7 +62,6 @@ brew "node"
 brew "openjdk"
 brew "openjpeg"
 brew "opentofu"
-brew "package-config"
 brew "pipx"
 brew "pkg-config" # https://github.com/driesvints/dotfiles/issues/20
 brew "pycparser"
@@ -93,7 +90,6 @@ brew "yarn"
 brew "zsh"
 brew "zsh-completions"
 # Additional / SRE formulae (alphabetical)
-brew "alertmanager"   # Installs amtool for Alertmanager management
 brew "derailed/k9s/k9s"
 brew "eksctl"         # EKS cluster management CLI
 brew "fluxcd/tap/flux"

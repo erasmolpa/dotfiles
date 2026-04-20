@@ -4,6 +4,13 @@
 brew_brewfile() { echo "${DOTFILES}/inventory/brew/Brewfile"; }
 brew_casks_file() { echo "${DOTFILES}/inventory/brew/casks.txt"; }
 
+brew__is_implicit_tap() {
+  case "$1" in
+    homebrew/cask | homebrew/core) return 0 ;;
+    *) return 1 ;;
+  esac
+}
+
 brew__parse_taps() {
   local bf="$1"
   [[ -f "$bf" ]] || return 0
@@ -32,7 +39,9 @@ brew_get_desired() {
   local bf cf tap f id ext
   bf="$(brew_brewfile)"
   while IFS= read -r tap; do
-    [[ -n "$tap" ]] && echo "tap:${tap}"
+    [[ -z "$tap" ]] && continue
+    brew__is_implicit_tap "$tap" && continue
+    echo "tap:${tap}"
   done < <(brew__parse_taps "$bf")
   while IFS= read -r f; do
     [[ -n "$f" ]] && echo "formula:${f}"
@@ -75,6 +84,7 @@ brew_get_current() {
 
   while IFS= read -r tap; do
     [[ -z "$tap" ]] && continue
+    brew__is_implicit_tap "$tap" && continue
     grep -Fxq "$tap" "$taps_f" 2>/dev/null && echo "tap:${tap}"
   done < <(brew__parse_taps "$bf")
 
@@ -101,7 +111,7 @@ brew_get_current() {
     done <"$cf"
   fi
 
-  if command -v mas &>/dev/null; then
+  if command -v mas &>/dev/null && mas account &>/dev/null; then
     log_progress "brew: reading Mac App Store installs (mas list)..."
     mas list 2>/dev/null | awk '$1 ~ /^[0-9]+$/ { print $1 }' | sort -u >"$mas_ids" || true
     while IFS= read -r id; do
@@ -128,7 +138,24 @@ brew_get_current() {
 brew_install() {
   local buf
   buf="$(cat)"
-  local kind line cnt
+  local kind line cnt tap ext_cli can_install_vscode=1 can_install_mas=1
+  if ! command -v mas &>/dev/null; then
+    can_install_mas=0
+    log_warn "brew: mas not found; skipping Mac App Store apps"
+  elif ! mas account &>/dev/null; then
+    can_install_mas=0
+    log_warn "brew: mas is not signed in; skipping Mac App Store apps"
+  fi
+
+  if command -v code &>/dev/null; then
+    ext_cli="code"
+  elif command -v cursor &>/dev/null; then
+    ext_cli="cursor"
+  else
+    can_install_vscode=0
+    log_warn "brew: neither 'code' nor 'cursor' CLI found; skipping editor extensions"
+  fi
+
   for kind in tap formula cask mas vscode; do
     cnt="$(printf '%s\n' "$buf" | grep "^${kind}:" 2>/dev/null | wc -l | tr -d ' ')"
     [[ -z "$cnt" || ! "$cnt" =~ ^[0-9]+$ ]] && cnt=0
@@ -137,7 +164,9 @@ brew_install() {
       [[ -z "$line" ]] && continue
       case "$line" in
         tap:*)
-          run_command brew tap "${line#tap:}"
+          tap="${line#tap:}"
+          brew__is_implicit_tap "$tap" && continue
+          run_command brew tap "$tap"
           ;;
         formula:*)
           run_command brew install "${line#formula:}"
@@ -146,10 +175,12 @@ brew_install() {
           run_command brew install --cask "${line#cask:}"
           ;;
         mas:*)
+          [[ "$can_install_mas" -eq 0 ]] && continue
           run_command mas install "${line#mas:}"
           ;;
         vscode:*)
-          run_command code --install-extension "${line#vscode:}"
+          [[ "$can_install_vscode" -eq 0 ]] && continue
+          run_command "$ext_cli" --install-extension "${line#vscode:}"
           ;;
       esac
     done < <(echo "$buf" | grep "^${kind}:" || true)

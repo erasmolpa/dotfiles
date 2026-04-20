@@ -11,8 +11,8 @@ font-open-sans
 font-roboto
 font-source-code-pro
 font-source-code-pro-for-powerline
-font-source-sans-pro
-font-source-serif-pro
+font-source-sans-3
+font-source-serif-4
 github
 google-chrome
 iterm2
