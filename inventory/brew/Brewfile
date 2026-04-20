@@ -12,6 +12,7 @@ tap "stripe/stripe-mock"
 
 # Binaries
 brew "act"
+brew "grafana/grafana/alloy"
 brew "aom"
 brew "awscli"
 brew "azure-cli"
