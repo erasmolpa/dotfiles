@@ -1,5 +1,6 @@
 # Taps
 tap "derailed/k9s"
+tap "grafana/grafana"
 tap "homebrew/bundle"
 tap "homebrew/cask-fonts"
 tap "homebrew/cask-versions"
@@ -12,16 +13,16 @@ tap "stripe/stripe-mock"
 
 # Binaries
 brew "act"
-brew "grafana/grafana/alloy"
+brew "alloy"              # Grafana Alloy (grafana/grafana tap)
 brew "aom"
 brew "awscli"
 brew "azure-cli"
-brew "bash" # Latest Bash version
+brew "bash"               # Latest Bash version
 brew "bash-completion"
-brew "bat" # Used for spatie/visit
+brew "bat"                # Used for spatie/visit
 brew "brew-cask-completion"
 brew "cffi"
-brew "coreutils" # Those that come with macOS are outdated
+brew "coreutils"          # Those that come with macOS are outdated
 brew "cri-tools"
 brew "cryptography"
 brew "docker-compose"
@@ -35,7 +36,6 @@ brew "git"
 brew "glib"
 brew "gnutls"
 brew "go"
-brew "golang"
 brew "golang-migrate"
 brew "grep"
 brew "harfbuzz"
@@ -44,7 +44,8 @@ brew "httpie"
 brew "infracost"
 brew "iproute2mac"
 brew "jpeg-xl"
-brew "jq" # Used for spatie/visit
+brew "jq"                 # Used for spatie/visit
+brew "k6"                 # Load testing tool
 brew "k8sgpt"
 brew "kind"
 brew "kubernetes-cli"
@@ -56,7 +57,7 @@ brew "libmicrohttpd"
 brew "librist"
 brew "localstack"
 brew "mackup"
-brew "mas" # Mac App Store manager
+brew "mas"                # Mac App Store manager
 brew "minikube"
 brew "neovim"
 brew "node"
@@ -64,18 +65,17 @@ brew "openjdk"
 brew "openjpeg"
 brew "opentofu"
 brew "pipx"
-brew "pkg-config" # https://github.com/driesvints/dotfiles/issues/20
+brew "pkgconf"            # pkg-config replacement (homebrew renamed pkg-config → pkgconf)
 brew "pycparser"
-brew "pyenv" # used for switching python versions
-brew "python" # should to install python3
+brew "pyenv"              # Used for switching Python versions
 brew "python@3.11"
 brew "redis"
 brew "ripgrep"
+brew "shellcheck"
 brew "sonobuoy"
-brew "stripe/stripe-cli/stripe"
-brew "stripe/stripe-mock/stripe-mock"
+brew "stripe"             # Stripe CLI (stripe/stripe-cli tap)
+brew "stripe-mock"        # Stripe mock server (stripe/stripe-mock tap)
 brew "subversion"
-brew "svn" # Needed to install fonts
 brew "tesseract"
 brew "terraform"
 brew "terraform-docs"
@@ -90,20 +90,21 @@ brew "webp"
 brew "yarn"
 brew "zsh"
 brew "zsh-completions"
+
 # Additional / SRE formulae (alphabetical)
-brew "derailed/k9s/k9s"
-brew "eksctl"         # EKS cluster management CLI
-brew "fluxcd/tap/flux"
-brew "k6"             # Load testing tool
-brew "kustomize"      # Kubernetes manifest customization
-brew "loki"           # Installs logcli for LogQL queries
-brew "norwoodj/tap/helm-docs"
-brew "prometheus"     # Installs promtool for config/rule validation
-brew "pulumi/tap/pulumi"
-brew "shihanng/tfvar/tfvar"
-brew "stern"          # Multi-pod log tailing for Kubernetes
-brew "yq"             # YAML/JSON processor (like jq for YAML)
+brew "eksctl"             # EKS cluster management CLI
+brew "flux"               # GitOps tool for Kubernetes (fluxcd/tap)
+brew "helm-docs"          # Auto-generate Helm chart docs (norwoodj/tap)
+brew "k9s"                # Kubernetes TUI (derailed/k9s tap)
+brew "kustomize"          # Kubernetes manifest customization
+brew "loki"               # Installs logcli for LogQL queries
+brew "prometheus"         # Installs promtool for config/rule validation
+brew "pulumi"             # Infrastructure as code (pulumi/tap)
+brew "stern"              # Multi-pod log tailing for Kubernetes
+brew "tfvar"              # Terraform variable file generator (shihanng/tap)
+brew "yq"                 # YAML/JSON processor (like jq for YAML)
 # DataDog agent → install via: https://docs.datadoghq.com/agent/basic_agent_usage/osx/
+
 # Mac App Store
 mas "Byword", id: 420212497
 mas "GCalendar for Google Calendar", id: 1596768976
@@ -124,7 +125,9 @@ mas "Telegram", id: 747648890
 mas "Things", id: 904280696
 mas "Trello", id: 1278508951
 mas "WhatsApp", id: 1147396723
-# VSCode Extensions
+
+# VSCode / Cursor Extensions
+# Note: anysphere.cursorpyright replaces ms-python.vscode-pylance in Cursor
 vscode "4bde9604-932c-638d-b5d2-db273992f59c.python-silver-pack"
 vscode "4ops.terraform"
 vscode "aaron-bond.better-comments"
@@ -133,7 +136,7 @@ vscode "aldijav.golangwithdidi"
 vscode "alefragnani.project-manager"
 vscode "almenon.arepl"
 vscode "amazonwebservices.aws-toolkit-vscode"
-vscode "anysphere.pyright"
+vscode "anysphere.cursorpyright"      # Cursor-native Pylance replacement
 vscode "aooiu.markdown2confluence"
 vscode "azapi-vscode.azapi"
 vscode "azps-tools.azps-tools"
@@ -164,10 +167,14 @@ vscode "erd0s.terraform-autocomplete"
 vscode "formulahendry.code-runner"
 vscode "foxundermoon.shell-format"
 vscode "ginfuru.ginfuru-vscode-jekyll-syntax"
+vscode "github.copilot"
+vscode "github.copilot-chat"
 vscode "github.github-vscode-theme"
 vscode "github.vscode-github-actions"
 vscode "github.vscode-pull-request-github"
 vscode "golang.go"
+vscode "grafana.grafana-alloy"        # Alloy config language support
+vscode "grafana.grafana-vscode"       # Grafana dashboards in editor
 vscode "grafana.vscode-jsonnet"
 vscode "graykode.ai-docstring"
 vscode "hashicorp.terraform"
@@ -211,7 +218,6 @@ vscode "ms-python.black-formatter"
 vscode "ms-python.debugpy"
 vscode "ms-python.isort"
 vscode "ms-python.python"
-vscode "ms-python.vscode-pylance"
 vscode "ms-toolsai.jupyter"
 vscode "ms-toolsai.jupyter-keymap"
 vscode "ms-toolsai.jupyter-renderers"
@@ -235,6 +241,7 @@ vscode "oderwat.indent-rainbow"
 vscode "perkovec.emoji"
 vscode "pjmiravalle.terraform-advanced-syntax-highlighting"
 vscode "pkief.material-icon-theme"
+vscode "poeticandroid.vscode-poetry"
 vscode "premparihar.gotestexplorer"
 vscode "quicktype.quicktype"
 vscode "redhat.vscode-yaml"

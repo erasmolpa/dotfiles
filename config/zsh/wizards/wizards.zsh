@@ -26,9 +26,15 @@ help-wizards() {
   echo "\n╔══════════════════════════════════════════════════════╗"
   echo   "║              Interactive Wizards                     ║"
   echo   "╚══════════════════════════════════════════════════════╝\n"
+  echo "── Alloy ──────────────────────────────────────────────"
+  echo "  wiz-alloy          Add a component block to an Alloy config"
+  echo ""
+  echo "── Kubernetes ─────────────────────────────────────────"
   echo "  wiz-k8s-deploy     Kubernetes deployment + service + HPA"
   echo "  wiz-k8s-debug      K8s pod troubleshooting checklist"
   echo "  wiz-k8s-expose     Expose a service (ClusterIP/LB/Ingress)"
+  echo ""
+  echo "── Observability ──────────────────────────────────────"
   echo "  wiz-pql            PromQL query builder (RED / SLO)"
   echo "  wiz-slo            SLO/SLI calculator & config generator"
   echo "  wiz-alert          Prometheus alert rule builder"
@@ -36,12 +42,264 @@ help-wizards() {
   echo "  wiz-logql          LogQL query builder"
   echo "  wiz-traceql        TraceQL query builder"
   echo "  wiz-grafana-dash   Grafana dashboard JSON skeleton"
+  echo ""
+  echo "── Terraform ──────────────────────────────────────────"
   echo "  wiz-tf-eks         Terraform EKS cluster module"
   echo "  wiz-tf-monitoring  Terraform monitoring stack (Helm)"
+  echo ""
+  echo "── Operations ─────────────────────────────────────────"
   echo "  wiz-oncall         On-call triage checklist"
   echo "  wiz-capacity       Capacity planning helper"
   echo "  wiz-cost-audit     Observability cost audit"
   echo ""
+}
+
+# ─────────────────────────────────────────────────────────────────────────────
+#  wiz-alloy — Interactive Grafana Alloy component block generator
+# ─────────────────────────────────────────────────────────────────────────────
+wiz-alloy() {
+  echo "\n=== Grafana Alloy Component Wizard ===\n"
+  echo "What do you want to add?"
+  echo "  1) Prometheus scrape job (static targets)"
+  echo "  2) Prometheus scrape job (Docker service discovery)"
+  echo "  3) Loki log collection (Docker containers)"
+  echo "  4) Loki log processing stage (JSON parser)"
+  echo "  5) OTLP receiver (traces + metrics from SDK)"
+  echo "  6) Remote write to Prometheus / Mimir"
+  echo "  7) Remote write to Loki"
+  echo "  8) Tail-based trace sampling"
+  echo "  9) Health-check span filter (drop /health noise)"
+  printf "Choose [1-9]: "; read -r choice
+
+  printf "Output file (blank to print to stdout): "; read -r outfile
+
+  local block=""
+
+  case "$choice" in
+    1)
+      printf "Job label (e.g. my-service): "; read -r job
+      printf "Target address (e.g. my-service:8080): "; read -r addr
+      printf "Scrape interval [15s]: "; read -r interval; interval="${interval:-15s}"
+      printf "Forward to receiver (e.g. prometheus.remote_write.mimir.receiver): "; read -r fwd
+      block="prometheus.scrape \"${job}\" {
+  targets = [
+    {\"__address__\" = \"${addr}\", \"job\" = \"${job}\"},
+  ]
+  scrape_interval = \"${interval}\"
+  forward_to      = [${fwd}]
+}"
+      ;;
+    2)
+      printf "Job label (e.g. docker-apps): "; read -r job
+      printf "Docker host [unix:///var/run/docker.sock]: "; read -r dhost; dhost="${dhost:-unix:///var/run/docker.sock}"
+      printf "Service label to extract (e.g. service): "; read -r svc_label
+      printf "Forward to receiver (e.g. prometheus.remote_write.mimir.receiver): "; read -r fwd
+      block="discovery.docker \"${job}\" {
+  host             = \"${dhost}\"
+  refresh_interval = \"10s\"
+}
+
+discovery.relabel \"${job}\" {
+  targets = discovery.docker.${job}.targets
+
+  rule {
+    source_labels = [\"__meta_docker_container_name\"]
+    regex         = \"/(.*)\"
+    target_label  = \"container\"
+  }
+
+  rule {
+    source_labels = [\"__meta_docker_container_label_${svc_label}\"]
+    target_label  = \"${svc_label}\"
+  }
+}
+
+prometheus.scrape \"${job}\" {
+  targets         = discovery.relabel.${job}.output
+  scrape_interval = \"15s\"
+  forward_to      = [${fwd}]
+}"
+      ;;
+    3)
+      printf "Label name for this source (e.g. app-logs): "; read -r label
+      printf "Docker host [unix:///var/run/docker.sock]: "; read -r dhost; dhost="${dhost:-unix:///var/run/docker.sock}"
+      printf "Forward to receiver (e.g. loki.process.json.receiver): "; read -r fwd
+      block="loki.source.docker \"${label}\" {
+  host       = \"${dhost}\"
+  targets    = discovery.relabel.containers.output
+  forward_to = [${fwd}]
+}"
+      ;;
+    4)
+      printf "Stage label (e.g. json): "; read -r stage
+      printf "JSON fields to extract (comma-separated, e.g. level=levelname,trace_id): "; read -r fields_raw
+      printf "Labels to promote (comma-separated, e.g. level,service): "; read -r labels_raw
+      printf "Structured metadata to attach (comma-separated, e.g. trace_id,span_id): "; read -r meta_raw
+      printf "Forward to receiver (e.g. loki.write.loki.receiver): "; read -r fwd
+
+      # Build expressions map
+      local expr_map=""
+      IFS=',' read -rA fields <<< "$fields_raw"
+      for f in "${fields[@]}"; do
+        f="${f// /}"
+        [[ -n "$f" ]] && expr_map+="    ${f%%=*} = \"${f##*=}\"\n"
+      done
+
+      # Build labels map
+      local lbl_map=""
+      IFS=',' read -rA lbls <<< "$labels_raw"
+      for l in "${lbls[@]}"; do
+        l="${l// /}"
+        [[ -n "$l" ]] && lbl_map+="    ${l} = \"\"\n"
+      done
+
+      # Build metadata map
+      local meta_map=""
+      IFS=',' read -rA metas <<< "$meta_raw"
+      for m in "${metas[@]}"; do
+        m="${m// /}"
+        [[ -n "$m" ]] && meta_map+="    ${m} = \"\"\n"
+      done
+
+      block="loki.process \"${stage}\" {
+  stage.json {
+    expressions = {
+$(printf "%b" "$expr_map")  }
+  }
+  stage.labels {
+    values = {
+$(printf "%b" "$lbl_map")  }
+  }
+  stage.structured_metadata {
+    values = {
+$(printf "%b" "$meta_map")  }
+  }
+  forward_to = [${fwd}]
+}"
+      ;;
+    5)
+      printf "Receiver label (e.g. default): "; read -r label
+      printf "gRPC endpoint [0.0.0.0:4317]: "; read -r grpc; grpc="${grpc:-0.0.0.0:4317}"
+      printf "HTTP endpoint [0.0.0.0:4318]: "; read -r http; http="${http:-0.0.0.0:4318}"
+      printf "Forward traces to (e.g. otelcol.exporter.otlp.tempo.input): "; read -r traces_fwd
+      printf "Forward metrics to (blank to skip): "; read -r metrics_fwd
+
+      local output_block="    traces = [${traces_fwd}]"
+      [[ -n "$metrics_fwd" ]] && output_block+="
+    metrics = [${metrics_fwd}]"
+
+      block="otelcol.receiver.otlp \"${label}\" {
+  grpc { endpoint = \"${grpc}\" }
+  http { endpoint = \"${http}\" }
+  output {
+${output_block}
+  }
+}"
+      ;;
+    6)
+      printf "Remote write label (e.g. mimir): "; read -r label
+      printf "Remote write URL (e.g. http://mimir:9009/api/v1/push): "; read -r url
+      printf "Add basic auth? (y/N): "; read -r auth
+      local auth_block=""
+      if [[ "$auth" =~ ^[Yy]$ ]]; then
+        printf "Username: "; read -r user
+        auth_block="
+    basic_auth {
+      username = \"${user}\"
+      password = env(\"PROM_REMOTE_WRITE_PASSWORD\")
+    }"
+      fi
+      block="prometheus.remote_write \"${label}\" {
+  endpoint {
+    url = \"${url}\"${auth_block}
+  }
+}"
+      ;;
+    7)
+      printf "Loki write label (e.g. loki): "; read -r label
+      printf "Loki push URL (e.g. http://loki:3100/loki/api/v1/push): "; read -r url
+      printf "Tenant ID (blank to skip): "; read -r tenant
+      local tenant_block=""
+      [[ -n "$tenant" ]] && tenant_block="
+    tenant_id = \"${tenant}\""
+      block="loki.write \"${label}\" {
+  endpoint {
+    url = \"${url}\"${tenant_block}
+  }
+}"
+      ;;
+    8)
+      printf "Sampler label (e.g. tail): "; read -r label
+      printf "Wait duration for decision [5s]: "; read -r wait; wait="${wait:-5s}"
+      printf "Decision cache size [10000]: "; read -r cache; cache="${cache:-10000}"
+      printf "Forward to exporter (e.g. otelcol.exporter.otlp.tempo.input): "; read -r fwd
+      block="otelcol.processor.tail_sampling \"${label}\" {
+  decision_wait = \"${wait}\"
+  num_traces    = ${cache}
+
+  policy {
+    name = \"always-sample-errors\"
+    type = \"status_code\"
+    status_code { status_codes = [\"ERROR\"] }
+  }
+
+  policy {
+    name = \"always-sample-slow\"
+    type = \"latency\"
+    latency { threshold_ms = 2000 }
+  }
+
+  policy {
+    name = \"probabilistic-10pct\"
+    type = \"probabilistic\"
+    probabilistic { sampling_percentage = 10 }
+  }
+
+  output {
+    traces = [${fwd}]
+  }
+}"
+      ;;
+    9)
+      printf "Filter label (e.g. drop-health): "; read -r label
+      printf "Forward to (e.g. otelcol.exporter.otlp.tempo.input): "; read -r fwd
+      block="otelcol.processor.filter \"${label}\" {
+  error_mode = \"ignore\"
+
+  traces {
+    span = [
+      // Drop health-check and readiness probe spans
+      \"attributes[\\\"http.route\\\"] == \\\"/health\\\"\",
+      \"attributes[\\\"http.route\\\"] == \\\"/ready\\\"\",
+      \"attributes[\\\"http.route\\\"] == \\\"/metrics\\\"\",
+    ]
+  }
+
+  output {
+    traces = [${fwd}]
+  }
+}"
+      ;;
+  esac
+
+  if [[ -z "$block" ]]; then
+    echo "✗ No block generated"
+    return 1
+  fi
+
+  if [[ -n "$outfile" ]]; then
+    echo "" >> "$outfile"
+    echo "$block" >> "$outfile"
+    echo "✓ Appended to $outfile"
+    printf "Validate now? (y/N): "; read -r val
+    if [[ "$val" =~ ^[Yy]$ ]]; then
+      alloy-validate "$outfile"
+    fi
+  else
+    echo "\n─── Generated Alloy block ───────────────────────────"
+    echo "$block"
+    echo ""
+  fi
 }
 
 # ─────────────────────────────────────────────────────────────────────────────

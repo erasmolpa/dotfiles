@@ -2,9 +2,11 @@
 # Lines starting with # are ignored.
 1password
 caffeine
+claude-code
+cursor
 dbngin
 discord
-docker
+docker-desktop
 firefox
 font-lato
 font-open-sans
@@ -16,7 +18,7 @@ font-source-serif-4
 github
 google-chrome
 iterm2
-ollama
+ollama-app
 powershell
 slack
 telegram

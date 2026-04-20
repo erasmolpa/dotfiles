@@ -195,6 +195,78 @@ YAML
 }
 
 # =============================================================================
+#  GRAFANA ALLOY HELPERS
+# =============================================================================
+
+# Validate an Alloy config file using the alloy binary
+# Usage: alloy-validate [file]   (defaults to ./config.alloy)
+alloy-validate() {
+  local file="${1:-config.alloy}"
+  if [[ ! -f "$file" ]]; then
+    echo "✗ File not found: $file"
+    return 1
+  fi
+  echo "→ Validating $file ..."
+  if alloy validate "$file" 2>&1; then
+    echo "✓ $file is valid"
+  else
+    echo "✗ Validation failed"
+    return 1
+  fi
+}
+
+# Format an Alloy config file in-place (alloy fmt --write)
+# Usage: alloy-fmt [file]   (defaults to ./config.alloy)
+alloy-fmt() {
+  local file="${1:-config.alloy}"
+  if [[ ! -f "$file" ]]; then
+    echo "✗ File not found: $file"
+    return 1
+  fi
+  echo "→ Formatting $file ..."
+  alloy fmt --write "$file" && echo "✓ Formatted: $file"
+}
+
+# Show diff of what alloy fmt would change (dry-run)
+# Usage: alloy-fmt-diff [file]
+alloy-fmt-diff() {
+  local file="${1:-config.alloy}"
+  if [[ ! -f "$file" ]]; then
+    echo "✗ File not found: $file"
+    return 1
+  fi
+  diff "$file" <(alloy fmt "$file") || true
+}
+
+# Open Alloy debugging UI in browser (requires Alloy running locally)
+# Usage: alloy-open [port]
+alloy-open() {
+  local port="${1:-12345}"
+  local url="http://localhost:${port}"
+  echo "→ Opening Alloy UI at $url"
+  open "$url"
+}
+
+# Tail Alloy component graph (via HTTP API)
+# Usage: alloy-graph [port]
+alloy-graph() {
+  local port="${1:-12345}"
+  curl -sf "http://localhost:${port}/api/v0/web/components" \
+    | python3 -m json.tool 2>/dev/null \
+    | grep -E '"id"|"health"' \
+    || echo "→ Try: open http://localhost:${port}/graph"
+}
+
+# Convert a Prometheus config to Alloy format
+# Usage: alloy-convert-prom <prometheus.yml> [output.alloy]
+alloy-convert-prom() {
+  local src="${1:?Usage: alloy-convert-prom <prometheus.yml> [output.alloy]}"
+  local dst="${2:-${src%.yml}.alloy}"
+  alloy convert --source-format=prometheus --output="$dst" "$src" \
+    && echo "✓ Converted → $dst"
+}
+
+# =============================================================================
 #  KUBERNETES HELPERS
 # =============================================================================
 
@@ -815,6 +887,14 @@ help-sre() {
   echo "  gen-k8s-hpa <app>           HorizontalPodAutoscaler YAML"
   echo "  gen-k8s-pdb <app>           PodDisruptionBudget YAML"
   echo ""
+  echo "── Grafana Alloy ──────────────────────────────────────"
+  echo "  alloy-validate [file]       Validate config.alloy syntax"
+  echo "  alloy-fmt [file]            Format config.alloy in-place"
+  echo "  alloy-fmt-diff [file]       Dry-run: show what fmt would change"
+  echo "  alloy-open [port]           Open Alloy debug UI in browser"
+  echo "  alloy-graph [port]          Show component health via API"
+  echo "  alloy-convert-prom <yml>    Convert prometheus.yml to Alloy"
+  echo ""
   echo "── Scaffolding — Observability ────────────────────────"
   echo "  gen-prom-config [file]      Prometheus prometheus.yml"
   echo "  gen-prom-alert <name>       Prometheus alert rule"
@@ -824,6 +904,6 @@ help-sre() {
   echo "  gen-tempo-config [file]     Tempo tempo.yml"
   echo "  gen-alloy-config [file]     Grafana Alloy config.alloy"
   echo ""
-  echo "Run: help-all [terraform|aws|k8s|prometheus|loki|docker|wizards]"
+  echo "Run: help-all [terraform|aws|k8s|prometheus|loki|docker|wizards|alloy]"
   echo ""
 }
