@@ -120,10 +120,19 @@ brew_get_current() {
     done < <(brew__parse_mas_ids "$bf")
   fi
 
+  local ext_cli
   if command -v code &>/dev/null; then
+    ext_cli="code"
+  elif command -v cursor &>/dev/null; then
+    ext_cli="cursor"
+  else
+    ext_cli=""
+  fi
+
+  if [[ -n "$ext_cli" ]]; then
     log_progress "brew: reading VS Code extensions..."
     local installed
-    installed="$(code --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
+    installed="$("$ext_cli" --list-extensions 2>/dev/null | tr '[:upper:]' '[:lower:]' || true)"
     while IFS= read -r ext; do
       [[ -z "$ext" ]] && continue
       echo "$installed" | grep -Fxq "$ext" && echo "vscode:${ext}"
