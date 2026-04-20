@@ -20,7 +20,7 @@ fi
 DOTFILES_TARGET="${DOTFILES_TARGET:-$HOME/.dotfiles}"
 if [[ ! -d "$DOTFILES_TARGET/.git" ]]; then
   echo "[+] Cloning dotfiles into $DOTFILES_TARGET ..."
-  git clone https://github.com/erasmolpa/dotfiles.git "$DOTFILES_TARGET"
+  git clone https://github.com/erasmolpa/macctl.git "$DOTFILES_TARGET"
 else
   echo "[=] $DOTFILES_TARGET already exists; skipping clone."
 fi

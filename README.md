@@ -44,7 +44,7 @@ Architecture and extension points: `docs/MACCTL-ARCHITECTURE.md` · Import behav
 1. Clone to the canonical path (`.zshrc` expects `DOTFILES=$HOME/.dotfiles`):
 
    ```sh
-   git clone https://github.com/erasmolpa/dotfiles.git ~/.dotfiles
+   git clone https://github.com/erasmolpa/macctl.git ~/.dotfiles
    cd ~/.dotfiles
    ```
 

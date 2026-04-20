@@ -11,7 +11,7 @@ This repo uses **`bin/macctl`** for inventory-driven installs and **`config/`** 
 1. **Clone the repository:**
 
    ```sh
-   git clone https://github.com/erasmolpa/dotfiles.git ~/.dotfiles
+   git clone https://github.com/erasmolpa/macctl.git ~/.dotfiles
    cd ~/.dotfiles
    ```
 
