@@ -1,8 +1,15 @@
-# modules/ia.sh — AI and DevOps extras (brew tap/formula/cask plus uv pip)
+# modules/ia.sh — AI and DevOps extras (brew tap/formula/cask plus uv pip).
+# uv packages install in active venv, or `--system` when no venv is active.
 # shellcheck shell=bash
 
 ia_manifest() { echo "${DOTFILES}/inventory/ia/manifest.txt"; }
 ia_uvpkgs() { echo "${DOTFILES}/inventory/ia/uv-packages.txt"; }
+
+# Use the active virtualenv when present; otherwise install/query in system scope.
+ia__uv_scope_args() {
+  [[ -n "${VIRTUAL_ENV:-}" ]] && return 0
+  echo "--system"
+}
 
 ia_get_desired() {
   local f line k v
@@ -45,8 +52,10 @@ ia__cask_installed() {
 
 ia__uv_installed() {
   local p="$1"
+  local -a scope
   command -v uv &>/dev/null || return 1
-  uv pip show "$p" &>/dev/null
+  mapfile -t scope < <(ia__uv_scope_args)
+  uv pip show "${scope[@]}" "$p" &>/dev/null
 }
 
 ia_get_current() {
@@ -113,7 +122,9 @@ ia_install() {
       brew_cask) run_command brew install --cask "$v" ;;
       uvpip)
         if command -v uv &>/dev/null; then
-          run_command uv pip install "$v"
+          local -a scope
+          mapfile -t scope < <(ia__uv_scope_args)
+          run_command uv pip install "${scope[@]}" "$v"
         else
           log_warn "uv not found; skipping uvpip:${v}"
         fi

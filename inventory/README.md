@@ -14,7 +14,7 @@ See **`docs/MACCTL-ARCHITECTURE.md`** for the full plugin contract and extension
 | `node/global-packages.txt` | npm globals for the **node** module |
 | `golang/formulae.txt` | extra brew formulae for Go (beyond Brewfile) |
 | `ia/manifest.txt` | `tap:`, `brew_formula:`, `brew_cask:` lines |
-| `ia/uv-packages.txt` | one package per line for `uv pip install` |
+| `ia/uv-packages.txt` | one package per line for `uv pip install` (uses `--system` unless a venv is active) |
 | `vim/steps.txt` | reserved; vim module uses fixed steps + `state/vim-plugins.ok` |
 
 ## Commands

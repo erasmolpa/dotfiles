@@ -92,20 +92,20 @@ brew "webp"
 brew "yarn"
 brew "zsh"
 brew "zsh-completions"
+# Additional / SRE formulae (alphabetical)
+brew "alertmanager"   # Installs amtool for Alertmanager management
+brew "derailed/k9s/k9s"
+brew "eksctl"         # EKS cluster management CLI
 brew "fluxcd/tap/flux"
+brew "k6"             # Load testing tool
+brew "kustomize"      # Kubernetes manifest customization
+brew "loki"           # Installs logcli for LogQL queries
 brew "norwoodj/tap/helm-docs"
+brew "prometheus"     # Installs promtool for config/rule validation
 brew "pulumi/tap/pulumi"
 brew "shihanng/tfvar/tfvar"
-brew "derailed/k9s/k9s"
-# SRE / Observability tools
 brew "stern"          # Multi-pod log tailing for Kubernetes
-brew "k6"             # Load testing tool
-brew "eksctl"         # EKS cluster management CLI
 brew "yq"             # YAML/JSON processor (like jq for YAML)
-brew "kustomize"      # Kubernetes manifest customization
-brew "prometheus"     # Installs promtool for config/rule validation
-brew "loki"           # Installs logcli for LogQL queries
-brew "alertmanager"   # Installs amtool for Alertmanager management
 # DataDog agent → install via: https://docs.datadoghq.com/agent/basic_agent_usage/osx/
 # Mac App Store
 mas "Byword", id: 420212497

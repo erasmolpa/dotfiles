@@ -109,7 +109,7 @@ Deep inventory map: `inventory/TOOLS.md`.
 | `bootstrap/` | First-run and maintenance scripts |
 | `state/` | Snapshots and import backups (usually gitignored) |
 
-Root symlinks: `Brewfile` → `inventory/brew/Brewfile`. See the table above for the mental model; file-level detail stays in `docs/MACCTL-ARCHITECTURE.md`.
+Canonical Brew inventory lives at `inventory/brew/Brewfile` (no root-level duplicate file). See the table above for the mental model; file-level detail stays in `docs/MACCTL-ARCHITECTURE.md`.
 
 ---
 

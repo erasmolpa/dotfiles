@@ -1,10 +1,11 @@
-# Python packages installed with `uv pip install` when missing (one name per line)
-openai
+# Python packages installed with `uv pip install` when missing.
+# Scope: active venv if present; otherwise system site-packages via `--system`.
+huggingface_hub
 langchain
 langgraph
 llama-index
-huggingface_hub
-tiktoken
+openai
 pydantic
-typer
 rich
+tiktoken
+typer
