@@ -97,6 +97,14 @@ for f in "$ZSH_CUSTOM/wizards"/*.zsh(N); do source "$f"; done
 export LC_ALL=en_US.UTF-8
 export LANG=en_US.UTF-8
 
+# Go bin
+export PATH="$HOME/go/bin:$PATH"
+
+# Docker Desktop CLI completions
+fpath=("$HOME/.docker/completions" $fpath)
+autoload -Uz compinit
+compinit
+
 # Preferred editor for local and remote sessions
 # if [[ -n $SSH_CONNECTION ]]; then
 #   export EDITOR='vim'

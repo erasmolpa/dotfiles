@@ -8,6 +8,7 @@ secrets/
 /requirements.txt
 state/*
 !state/.gitkeep
+inventory/_generated/
 
 # macOS
 .DS_Store
@@ -20,6 +21,7 @@ state/*
 .idea/
 *.swp
 *.swo
+.config/
 
 # Terraform
 .terraform/
